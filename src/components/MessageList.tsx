@@ -71,7 +71,7 @@ export function MessageList({ messages, isLoading = false, onSendMessage }: Mess
       <div className="space-y-3 md:space-y-4 p-2 md:p-4 pt-4 md:pt-6 pb-4 md:pb-6 min-w-[220px]">
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-[calc(100vh-180px)] md:h-[calc(100vh-200px)] min-h-[280px] text-center p-4 md:p-8">
-            <h2 className="text-xl md:text-2xl font-semibold mb-2 min-w-[200px]">Welcome to Renben Chat!</h2>
+            <h2 className="text-xl md:text-2xl font-semibold mb-2 min-w-[200px]">Welcome to S3RD Chat!</h2>
             <p className="text-muted-foreground mb-4 text-sm md:text-base min-w-[180px]">
               This is an AI assistant. Ask me anything!
             </p>

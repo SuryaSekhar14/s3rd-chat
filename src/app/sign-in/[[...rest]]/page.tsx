@@ -25,7 +25,7 @@ export default function SignInPage() {
             >
               <Image
                 src="/logo.svg"
-                alt="Renben Chat Logo"
+                alt="S3RD Chat Logo"
                 fill
                 className="object-contain drop-shadow-[0_0_15px_rgba(99,102,241,0.5)]"
                 priority
@@ -38,7 +38,7 @@ export default function SignInPage() {
             transition={{ delay: 0.3, duration: 0.6 }}
             className="text-4xl md:text-5xl font-bold text-center md:text-left bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 via-purple-400 to-blue-500"
           >
-            Renben Chat
+            S3RD Chat
           </motion.h1>
           <motion.p 
             initial={{ opacity: 0 }}

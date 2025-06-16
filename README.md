@@ -1,10 +1,10 @@
-# Renben Chat
+# S3RD Chat
 
 A sophisticated real-time AI chatbot application built with Next.js 15, MobX state management, and the Vercel AI SDK, following the MVVM (Model-View-ViewModel) architecture pattern.
 
 ## Overview
 
-Renben Chat provides a modern, responsive interface for interacting with OpenAI's advanced language models. The application features real-time message streaming, chat history management, model selection, persona-based prompting, and a beautiful UI built with shadcn/ui components.
+S3RD Chat provides a modern, responsive interface for interacting with OpenAI's advanced language models. The application features real-time message streaming, chat history management, model selection, persona-based prompting, and a beautiful UI built with shadcn/ui components.
 
 ## Features
 
@@ -116,8 +116,8 @@ Renben Chat provides a modern, responsive interface for interacting with OpenAI'
 First, clone the repository and install dependencies:
 
 ```bash
-git clone https://github.com/your-username/renben-chat.git
-cd renben-chat
+git clone https://github.com/your-username/s3rd-chat.git
+cd s3rd-chat
 npm install
 ```
 

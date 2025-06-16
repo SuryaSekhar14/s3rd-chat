@@ -19,7 +19,7 @@ export function Welcome({ onCreateChat, isCreating = false }: WelcomeProps) {
           <div className="w-20 h-20 mx-auto">
             <Image
               src="/logo.svg"
-              alt="Renben Chat"
+              alt="S3RD Chat"
               width={80}
               height={80}
               className="w-full h-full"
@@ -28,7 +28,7 @@ export function Welcome({ onCreateChat, isCreating = false }: WelcomeProps) {
           
           <div className="space-y-3">
             <h1 className="text-3xl font-bold">
-              Welcome to Renben Chat
+              Welcome to S3RD Chat
             </h1>
             <p className="text-muted-foreground">
               Your intelligent AI companion for meaningful conversations

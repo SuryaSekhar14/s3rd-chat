@@ -11,7 +11,7 @@ export default function SignOutPage() {
     <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900 px-4">
       <div className="max-w-md w-full bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg">
         <h1 className="text-xl font-semibold mb-4 text-center text-gray-900 dark:text-white">
-          Sign out from Renben Chat
+          Sign out from S3RD Chat
         </h1>
         <div className="flex flex-col gap-4">
           <SignOutButton>

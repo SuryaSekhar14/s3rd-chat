@@ -129,7 +129,7 @@ export const Sidebar = observer(function Sidebar({ onCollapse, isCollapsed }: { 
       <div className="flex flex-col items-center justify-center p-2 md:p-4">
         <div className="flex items-center justify-center w-full mb-1">
           <h2 className="text-xl md:text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 via-purple-400 to-blue-500 text-center flex-1">
-            Renben Chat
+            S3RD Chat
           </h2>
           {onCollapse && !isCollapsed && (
             <Button

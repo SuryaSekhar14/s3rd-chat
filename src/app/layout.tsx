@@ -8,9 +8,9 @@ import { toastConfig } from "@/lib/config";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Renben Chat",
+  title: "S3RD Chat",
   description: "An AI-powered chat application",
-  metadataBase: new URL("https://renben-chat.s3rd.dev"),
+  metadataBase: new URL("https://s3rd-chat.s3rd.dev"),
   icons: {
     icon: [
       { url: "/favicon.svg", type: "image/svg+xml" },
@@ -23,17 +23,17 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "Renben Chat",
+    title: "S3RD Chat",
   },
   openGraph: {
-    title: "Renben Chat",
+    title: "S3RD Chat",
     description: "Experience intelligent conversations powered by advanced AI",
     images: [{ url: "/logo-512.png", width: 512, height: 512 }],
     type: "website",
   },
   twitter: {
     card: "summary",
-    title: "Renben Chat",
+    title: "S3RD Chat",
     description: "Experience intelligent conversations powered by advanced AI",
     images: [{ url: "/logo-512.png" }],
   },
