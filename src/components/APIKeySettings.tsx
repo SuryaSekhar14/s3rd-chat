@@ -270,7 +270,7 @@ export function APIKeySettings() {
                   </li>
                   <li className="flex items-center gap-2">
                     <Shield className="h-4 w-4 text-blue-500" />
-                    They're never sent to our servers except for validation
+                    {`They're never sent to our servers except for validation`}
                   </li>
                   <li className="flex items-center gap-2">
                     <Key className="h-4 w-4 text-purple-500" />
@@ -278,7 +278,7 @@ export function APIKeySettings() {
                   </li>
                   <li className="flex items-center gap-2">
                     <AlertCircle className="h-4 w-4 text-orange-500" />
-                    If no custom key is provided, we'll use our shared keys (with rate limits)
+                    {`If no custom key is provided, we'll use our shared keys (with rate limits)`}
                   </li>
                 </ul>
               </div>
