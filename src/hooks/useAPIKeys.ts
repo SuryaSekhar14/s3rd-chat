@@ -1,32 +1,42 @@
 import { useState, useEffect } from 'react';
-import { apiKeyManager, APIKeyConfig, APIKeyStatus } from '@/lib/apiKeyManager';
+import { apiKeyManager, APIKeyConfig, APIKeyStatus, StoragePreference } from '@/lib/apiKeyManager';
 
 export function useAPIKeys() {
   const [apiKeys, setApiKeys] = useState<APIKeyConfig>({});
   const [keyStatuses, setKeyStatuses] = useState<Record<string, APIKeyStatus>>({});
+  const [storagePreference, setStoragePreference] = useState<StoragePreference>({ useDatabase: false, lastUpdated: null });
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const loadKeys = () => {
-      const keys = apiKeyManager.loadAPIKeys();
-      setApiKeys(keys);
-      
-      const statuses: Record<string, APIKeyStatus> = {};
-      const providers = ['OpenAI', 'Anthropic', 'Google', 'DeepSeek'];
-      providers.forEach(provider => {
-        const status = apiKeyManager.getAPIKeyStatus(provider);
-        if (status) {
-          statuses[provider] = status;
-        }
-      });
-      setKeyStatuses(statuses);
-      setIsLoading(false);
+    const loadKeys = async () => {
+      setIsLoading(true);
+      try {
+        const keys = await apiKeyManager.loadAPIKeys();
+        setApiKeys(keys);
+        
+        const statuses: Record<string, APIKeyStatus> = {};
+        const providers = ['OpenAI', 'Anthropic', 'Google', 'DeepSeek'];
+        providers.forEach(provider => {
+          const status = apiKeyManager.getAPIKeyStatus(provider);
+          if (status) {
+            statuses[provider] = status;
+          }
+        });
+        setKeyStatuses(statuses);
+        
+        const pref = apiKeyManager.getCurrentStoragePreference();
+        setStoragePreference(pref);
+      } catch (error) {
+        console.error('Error loading API keys:', error);
+      } finally {
+        setIsLoading(false);
+      }
     };
 
     loadKeys();
 
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'sys_api_keys' || e.key === 'sys_api_key_status') {
+      if (e.key === 'sys_api_keys' || e.key === 'sys_api_key_status' || e.key === 'sys_storage_preference') {
         loadKeys();
       }
     };
@@ -35,10 +45,10 @@ export function useAPIKeys() {
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
-  const updateAPIKey = (provider: keyof APIKeyConfig, key: string) => {
+  const updateAPIKey = async (provider: keyof APIKeyConfig, key: string) => {
     const newKeys = { ...apiKeys, [provider]: key };
     setApiKeys(newKeys);
-    apiKeyManager.saveAPIKeys(newKeys);
+    await apiKeyManager.saveAPIKeys(newKeys);
     
     const providerName = getProviderName(provider);
     if (providerName) {
@@ -75,11 +85,11 @@ export function useAPIKeys() {
     }
   };
 
-  const clearAPIKey = (provider: keyof APIKeyConfig) => {
+  const clearAPIKey = async (provider: keyof APIKeyConfig) => {
     const newKeys = { ...apiKeys };
     delete newKeys[provider];
     setApiKeys(newKeys);
-    apiKeyManager.saveAPIKeys(newKeys);
+    await apiKeyManager.saveAPIKeys(newKeys);
     
     // Clear status
     const providerName = getProviderName(provider);
@@ -92,10 +102,35 @@ export function useAPIKeys() {
     }
   };
 
-  const clearAllAPIKeys = () => {
-    apiKeyManager.clearAPIKeys();
+  const clearAllAPIKeys = async () => {
+    await apiKeyManager.clearAPIKeys();
     setApiKeys({});
     setKeyStatuses({});
+  };
+
+  const updateStoragePreference = async (useDatabase: boolean) => {
+    apiKeyManager.updateStoragePreference(useDatabase);
+    setStoragePreference({ useDatabase, lastUpdated: new Date() });
+  };
+
+  const migrateToDatabase = async () => {
+    const success = await apiKeyManager.migrateToDatabase();
+    if (success) {
+      setStoragePreference({ useDatabase: true, lastUpdated: new Date() });
+      const keys = await apiKeyManager.loadAPIKeys();
+      setApiKeys(keys);
+    }
+    return success;
+  };
+
+  const migrateToLocalStorage = async () => {
+    const success = await apiKeyManager.migrateToLocalStorage();
+    if (success) {
+      setStoragePreference({ useDatabase: false, lastUpdated: new Date() });
+      const keys = await apiKeyManager.loadAPIKeys();
+      setApiKeys(keys);
+    }
+    return success;
   };
 
   const hasValidAPIKey = (provider: keyof APIKeyConfig) => {
@@ -116,11 +151,15 @@ export function useAPIKeys() {
   return {
     apiKeys,
     keyStatuses,
+    storagePreference,
     isLoading,
     updateAPIKey,
     testAPIKey,
     clearAPIKey,
     clearAllAPIKeys,
+    updateStoragePreference,
+    migrateToDatabase,
+    migrateToLocalStorage,
     hasValidAPIKey,
     getAPIKeyStatus
   };

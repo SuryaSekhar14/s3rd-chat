@@ -9,9 +9,9 @@ import { PanelLeft } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { KeyboardShortcutsHelp } from "./KeyboardShortcutsHelp";
 
-import { SettingsDialog } from "@/components/SettingsDialog";
 import { SettingsIcon } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { useRouter } from "next/navigation";
 
 interface MainLayoutProps {
   readonly children: React.ReactNode;
@@ -21,8 +21,7 @@ export function MainLayout({ children }: MainLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const { isMobile } = useScreenSize();
   const [shortcutsDialogOpen, setShortcutsDialogOpen] = useState(false);
-  const [settingsOpen, setSettingsOpen] = useState(false);
-  // Create a ref to store the timeout ID
+  const router = useRouter();
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   
 
@@ -33,7 +32,6 @@ export function MainLayout({ children }: MainLayoutProps) {
     }
   }, [isMobile]);
 
-  // Handle dialog auto-close
   useEffect(() => {
     if (shortcutsDialogOpen) {
       if (timerRef.current) {
@@ -59,7 +57,6 @@ export function MainLayout({ children }: MainLayoutProps) {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Toggle sidebar with Cmd/Ctrl+B
       if ((e.ctrlKey || e.metaKey) && e.key === 'b') {
         e.preventDefault();
         setSidebarOpen(prev => !prev);
@@ -84,7 +81,6 @@ export function MainLayout({ children }: MainLayoutProps) {
 
   return (
     <div className="flex h-screen relative">
-      {/* Mobile overlay that appears when sidebar is open */}
       {isMobile && sidebarOpen && (
         <div
           className="fixed inset-0 bg-black/50 z-20"
@@ -93,7 +89,6 @@ export function MainLayout({ children }: MainLayoutProps) {
         />
       )}
 
-      {/* Sidebar container with different styling for mobile */}
       {sidebarOpen && (
         <div
           className={`
@@ -108,7 +103,6 @@ export function MainLayout({ children }: MainLayoutProps) {
           </div>
         </div>
       )}
-      {/* Expand button when sidebar is collapsed */}
       {!sidebarOpen && (
         <Button
           variant="ghost"
@@ -120,13 +114,11 @@ export function MainLayout({ children }: MainLayoutProps) {
           <PanelLeft className="h-5 w-5" />
         </Button>
       )}
-      {/* Main content */}
       <div className="flex-1 overflow-hidden relative">
-        {/* Settings and theme toggle at top right */}
         <div className="absolute top-4 right-6 z-30 flex items-center gap-2">
           <button
             className="bg-muted/80 hover:bg-muted border border-border shadow-lg rounded-full p-1.5 transition-colors duration-200 hover:scale-105"
-            onClick={() => setSettingsOpen(true)}
+            onClick={() => router.push('/settings')}
             aria-label="Open settings"
           >
             <SettingsIcon className="h-4 w-4 text-foreground" />
@@ -134,9 +126,7 @@ export function MainLayout({ children }: MainLayoutProps) {
           <ThemeToggle />
         </div>
         {children}
-        <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
       </div>
-      {/* Keyboard shortcuts dialog */}
       <Dialog open={shortcutsDialogOpen} onOpenChange={setShortcutsDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <KeyboardShortcutsHelp />

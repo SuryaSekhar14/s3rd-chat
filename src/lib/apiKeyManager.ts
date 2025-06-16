@@ -12,8 +12,14 @@ export interface APIKeyStatus {
   lastChecked?: Date;
 }
 
-const API_KEYS_STORAGE_KEY = 'sys_api_keys';
+export interface StoragePreference {
+  useDatabase: boolean;
+  lastUpdated: Date | null;
+}
+
+const API_KEY_STORAGE_KEY = 'sys_api_keys';
 const API_KEY_STATUS_STORAGE_KEY = 'sys_api_key_status';
+const STORAGE_PREFERENCE_KEY = 'sys_storage_preference';
 
 export class APIKeyManager {
   private static instance: APIKeyManager;
@@ -43,25 +49,83 @@ export class APIKeyManager {
     }
   }
 
-  saveAPIKeys(keys: APIKeyConfig): void {
-    if (typeof window === 'undefined') return;
-
-    const encryptedKeys: Record<string, string> = {};
+  getCurrentStoragePreference(): StoragePreference {
+    if (typeof window === 'undefined') return { useDatabase: false, lastUpdated: null };
     
-    Object.entries(keys).forEach(([provider, key]) => {
-      if (key && key.trim()) {
-        encryptedKeys[provider] = this.encrypt(key.trim());
+    try {
+      const stored = localStorage.getItem(STORAGE_PREFERENCE_KEY);
+      
+      if (!stored) {
+        return { useDatabase: false, lastUpdated: null };
       }
-    });
-
-    localStorage.setItem(API_KEYS_STORAGE_KEY, JSON.stringify(encryptedKeys));
+      
+      const pref = JSON.parse(stored);
+      
+      return {
+        useDatabase: pref.useDatabase || false,
+        lastUpdated: pref.lastUpdated ? new Date(pref.lastUpdated) : null
+      };
+    } catch (error) {
+      return { useDatabase: false, lastUpdated: null };
+    }
   }
 
-  loadAPIKeys(): APIKeyConfig {
+  updateStoragePreference(useDatabase: boolean): void {
+    if (typeof window === 'undefined') return;
+    
+    const preference: StoragePreference = {
+      useDatabase,
+      lastUpdated: new Date()
+    };
+    
+    localStorage.setItem(STORAGE_PREFERENCE_KEY, JSON.stringify(preference));
+  }
+
+  async loadAPIKeys(): Promise<APIKeyConfig> {
+    const pref = this.getCurrentStoragePreference();
+    
+    if (pref.useDatabase) {
+      try {
+        const res = await fetch('/api/user/api-keys');
+        if (!res.ok) {
+          return this.getEnvFallbackKeys();
+        }
+        const data = await res.json();
+        const keys = data.apiKeys || {};
+        
+        if (Object.keys(keys).length === 0 || Object.values(keys).every(key => !key)) {
+          return this.getEnvFallbackKeys();
+        }
+        
+        return keys;
+      } catch (error) {
+        return this.getEnvFallbackKeys();
+      }
+    } else {
+      const localKeys = this.loadFromLocalStorage();
+      
+      if (Object.keys(localKeys).length === 0 || Object.values(localKeys).every(key => !key)) {
+        return this.getEnvFallbackKeys();
+      }
+      
+      return localKeys;
+    }
+  }
+
+  private getEnvFallbackKeys(): APIKeyConfig {
+    return {
+      openai: process.env.OPENAI_API_KEY,
+      anthropic: process.env.ANTHROPIC_API_KEY,
+      google: process.env.GOOGLE_API_KEY,
+      deepseek: process.env.DEEPSEEK_API_KEY,
+    };
+  }
+
+  private loadFromLocalStorage(): APIKeyConfig {
     if (typeof window === 'undefined') return {};
 
     try {
-      const stored = localStorage.getItem(API_KEYS_STORAGE_KEY);
+      const stored = localStorage.getItem(API_KEY_STORAGE_KEY);
       if (!stored) return {};
 
       const encryptedKeys = JSON.parse(stored);
@@ -76,18 +140,119 @@ export class APIKeyManager {
 
       return decryptedKeys;
     } catch (error) {
-      console.error('Error loading API keys:', error);
       return {};
     }
   }
 
-  getAPIKey(provider: keyof APIKeyConfig): string | undefined {
-    const keys = this.loadAPIKeys();
+  async saveAPIKeys(keys: APIKeyConfig): Promise<void> {
+    const pref = this.getCurrentStoragePreference();
+    
+    if (pref.useDatabase) {
+      try {
+        const response = await fetch('/api/user/api-keys', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ apiKeys: keys }),
+        });
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`Database save failed: ${response.status} ${errorText}`);
+        }
+      } catch (error) {
+        console.error('Error saving API keys to database:', error);
+        throw error;
+      }
+    } else {
+      this.saveToLocalStorage(keys);
+    }
+  }
+
+  private saveToLocalStorage(keys: APIKeyConfig): void {
+    if (typeof window === 'undefined') return;
+
+    const encryptedKeys: Record<string, string> = {};
+    
+    Object.entries(keys).forEach(([provider, key]) => {
+      if (key && key.trim()) {
+        encryptedKeys[provider] = this.encrypt(key.trim());
+      }
+    });
+
+    localStorage.setItem(API_KEY_STORAGE_KEY, JSON.stringify(encryptedKeys));
+  }
+
+  async clearAPIKeys(): Promise<void> {
+    const pref = this.getCurrentStoragePreference();
+    
+    if (pref.useDatabase) {
+      try {
+        await fetch('/api/user/api-keys', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ apiKeys: {} }),
+        });
+      } catch (error) {
+        console.error('Error clearing API keys from database:', error);
+        throw error;
+      }
+    } else {
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem(API_KEY_STORAGE_KEY);
+        localStorage.removeItem(API_KEY_STATUS_STORAGE_KEY);
+      }
+    }
+  }
+
+  async migrateToDatabase(): Promise<boolean> {
+    try {
+      const localKeys = this.loadFromLocalStorage();
+      await this.saveAPIKeys(localKeys);
+      this.updateStoragePreference(true);
+      return true;
+    } catch (error) {
+      console.error('Error migrating to database:', error);
+      return false;
+    }
+  }
+
+  async migrateToLocalStorage(): Promise<boolean> {
+    try {
+      const res = await fetch('/api/user/api-keys');
+      if (!res.ok) {
+        return false;
+      }
+      
+      const data = await res.json();
+      const keys = data.apiKeys || {};
+      
+      this.saveToLocalStorage(keys);
+      this.updateStoragePreference(false);
+      return true;
+    } catch (error) {
+      console.error('Error migrating to localStorage:', error);
+      return false;
+    }
+  }
+
+  async getAPIKey(provider: keyof APIKeyConfig): Promise<string | undefined> {
+    const keys = await this.loadAPIKeys();
     return keys[provider];
   }
 
-  hasAPIKey(provider: keyof APIKeyConfig): boolean {
-    const key = this.getAPIKey(provider);
+  getAPIKeySync(provider: keyof APIKeyConfig): string | undefined {
+    const pref = this.getCurrentStoragePreference();
+    if (pref.useDatabase) {
+      console.warn('getAPIKeySync called with database storage - returning undefined');
+      return undefined;
+    }
+    
+    const keys = this.loadFromLocalStorage();
+    return keys[provider];
+  }
+
+  async hasAPIKey(provider: keyof APIKeyConfig): Promise<boolean> {
+    const key = await this.getAPIKey(provider);
     return !!key && key.trim().length > 0;
   }
 
@@ -102,7 +267,7 @@ export class APIKeyManager {
       case 'anthropic':
         return trimmedKey.startsWith('sk-ant-') && trimmedKey.length > 20;
       case 'google':
-        return trimmedKey.length > 20; // Google API keys don't have a specific prefix
+        return trimmedKey.length > 20;
       case 'deepseek':
         return trimmedKey.startsWith('sk-') && trimmedKey.length > 20;
       default:
@@ -159,15 +324,8 @@ export class APIKeyManager {
       const statuses: Record<string, APIKeyStatus> = JSON.parse(stored);
       return statuses[provider] || null;
     } catch (error) {
-      console.error('Error loading API key status:', error);
       return null;
     }
-  }
-
-  clearAPIKeys(): void {
-    if (typeof window === 'undefined') return;
-    localStorage.removeItem(API_KEYS_STORAGE_KEY);
-    localStorage.removeItem(API_KEY_STATUS_STORAGE_KEY);
   }
 
   getAllAPIKeyStatuses(): APIKeyStatus[] {
@@ -180,7 +338,6 @@ export class APIKeyManager {
       const statuses: Record<string, APIKeyStatus> = JSON.parse(stored);
       return Object.values(statuses);
     } catch (error) {
-      console.error('Error loading API key statuses:', error);
       return [];
     }
   }

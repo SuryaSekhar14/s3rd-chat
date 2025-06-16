@@ -21,6 +21,12 @@ model User {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   
+  // Encrypted API keys for multi-device sync (optional)
+  openaiApiKey      String?  // Encrypted OpenAI API key
+  anthropicApiKey   String?  // Encrypted Anthropic API key
+  googleApiKey      String?  // Encrypted Google API key
+  deepseekApiKey    String?  // Encrypted DeepSeek API key
+  
   // Relations
   conversations Conversation[]
   

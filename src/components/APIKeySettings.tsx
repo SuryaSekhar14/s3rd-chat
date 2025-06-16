@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Switch } from "@/components/ui/switch";
 import { 
   Eye, 
   EyeOff, 
@@ -20,7 +21,11 @@ import {
   Plus,
   ArrowLeft,
   Shield,
-  Lock
+  Lock,
+  Database,
+  HardDrive,
+  Cloud,
+  RefreshCw
 } from "lucide-react";
 import { useAPIKeys } from "@/hooks/useAPIKeys";
 import showToast from "@/lib/toast";
@@ -78,14 +83,19 @@ export function APIKeySettings() {
   const [selectedProvider, setSelectedProvider] = useState<ProviderConfig | null>(null);
   const [showKey, setShowKey] = useState(false);
   const [testingKey, setTestingKey] = useState(false);
+  const [migrating, setMigrating] = useState(false);
   
   const {
     apiKeys,
     keyStatuses,
+    storagePreference,
     isLoading,
     updateAPIKey,
     testAPIKey,
-    clearAllAPIKeys
+    clearAllAPIKeys,
+    updateStoragePreference,
+    migrateToDatabase,
+    migrateToLocalStorage
   } = useAPIKeys();
 
   const handleKeyChange = (value: string) => {
@@ -124,14 +134,59 @@ export function APIKeySettings() {
     }
   };
 
-  const handleSaveAPIKey = () => {
-    showToast.success("API key saved successfully!");
+  const handleSaveAPIKey = async () => {
+    if (!selectedProvider) return;
+    
+    const key = apiKeys[selectedProvider.key];
+    if (!key || !key.trim()) {
+      showToast.error(`Please enter a ${selectedProvider.name} API key first`);
+      return;
+    }
+
+    try {
+      await updateAPIKey(selectedProvider.key, key);
+      
+      if (storagePreference.useDatabase) {
+        showToast.success(`${selectedProvider.name} API key saved to database!`);
+      } else {
+        showToast.success(`${selectedProvider.name} API key saved to local storage!`);
+      }
+    } catch (error) {
+      showToast.error(`Failed to save ${selectedProvider.name} API key`);
+      console.error(`Error saving ${selectedProvider.name} API key:`, error);
+    }
   };
 
   const handleClearAllKeys = () => {
     if (confirm("Are you sure you want to clear all API keys? This action cannot be undone.")) {
       clearAllAPIKeys();
       showToast.success("All API keys cleared");
+    }
+  };
+
+  const handleStorageToggle = async (useDatabase: boolean) => {
+    setMigrating(true);
+    try {
+      if (useDatabase) {
+        const success = await migrateToDatabase();
+        if (success) {
+          showToast.success("API keys migrated to database storage");
+        } else {
+          showToast.error("Failed to migrate to database storage");
+        }
+      } else {
+        const success = await migrateToLocalStorage();
+        if (success) {
+          showToast.success("API keys migrated to local storage");
+        } else {
+          showToast.error("Failed to migrate to local storage");
+        }
+      }
+    } catch (error) {
+      showToast.error("Error during migration");
+      console.error("Migration error:", error);
+    } finally {
+      setMigrating(false);
     }
   };
 
@@ -191,6 +246,70 @@ export function APIKeySettings() {
             </p>
           </div>
         </div>
+
+        <Card className="border-2 border-primary/10">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Database className="h-5 w-5" />
+              Storage Settings
+            </CardTitle>
+            <CardDescription>
+              Choose where your API keys are stored
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between p-4 border rounded-lg">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/20">
+                  {storagePreference.useDatabase ? (
+                    <Cloud className="h-5 w-5 text-blue-600" />
+                  ) : (
+                    <HardDrive className="h-5 w-5 text-green-600" />
+                  )}
+                </div>
+                <div>
+                  <h4 className="font-medium">
+                    {storagePreference.useDatabase ? "Database Storage" : "Local Storage"}
+                  </h4>
+                  <p className="text-sm text-muted-foreground">
+                    {storagePreference.useDatabase 
+                      ? "Keys are encrypted and synced across devices" 
+                      : "Keys are stored locally in your browser"
+                    }
+                  </p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <div className={`w-2 h-2 rounded-full ${storagePreference.useDatabase ? 'bg-blue-500' : 'bg-green-500'}`}></div>
+                    <span className="text-xs text-muted-foreground">
+                      {storagePreference.useDatabase ? 'Active: Database' : 'Active: Local'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">Local</span>
+                <Switch
+                  checked={storagePreference.useDatabase}
+                  onCheckedChange={handleStorageToggle}
+                  disabled={migrating}
+                />
+                <span className="text-sm text-muted-foreground">Database</span>
+              </div>
+            </div>
+            
+            {migrating && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <RefreshCw className="h-4 w-4 animate-spin" />
+                Migrating API keys...
+              </div>
+            )}
+            
+            {storagePreference.lastUpdated && (
+              <p className="text-xs text-muted-foreground">
+                Last updated: {new Date(storagePreference.lastUpdated).toLocaleString()}
+              </p>
+            )}
+          </CardContent>
+        </Card>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {providers.map((provider, index) => {
@@ -266,11 +385,14 @@ export function APIKeySettings() {
                 <ul className="text-sm text-muted-foreground space-y-2">
                   <li className="flex items-center gap-2">
                     <Lock className="h-4 w-4 text-green-500" />
-                    Your API keys are encrypted and stored locally in your browser
+                    Your API keys are encrypted and stored {storagePreference.useDatabase ? "securely in our database" : "locally in your browser"}
                   </li>
                   <li className="flex items-center gap-2">
                     <Shield className="h-4 w-4 text-blue-500" />
-                    {`They're never sent to our servers except for validation`}
+                    {storagePreference.useDatabase 
+                      ? "Keys are synced across all your devices" 
+                      : "Keys are never sent to our servers except for validation"
+                    }
                   </li>
                   <li className="flex items-center gap-2">
                     <Key className="h-4 w-4 text-purple-500" />

@@ -42,7 +42,7 @@ export const POST = AuthenticatedEdgeRequest(async (req: NextRequest, { userId }
     
     let aiModel;
     try {
-      aiModel = getModelProvider(modelId as ModelId);
+      aiModel = await getModelProvider(modelId as ModelId);
     } catch (modelError) {
       console.error(`Error getting model provider for ${modelId}:`, modelError);
       return new Response(JSON.stringify({ 
