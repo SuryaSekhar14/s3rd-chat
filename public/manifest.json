@@ -1,0 +1,23 @@
+{
+  "name": "Renben Chat",
+  "short_name": "Renben Chat",
+  "description": "Experience intelligent conversations powered by advanced AI",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#111827",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/logo-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/logo-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+} 

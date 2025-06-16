@@ -1,0 +1,73 @@
+import { makeAutoObservable } from 'mobx';
+
+export interface ChatMessageJSON {
+  id: number;
+  content: string;
+  isUser: boolean;
+  aiModel?: string; // AI model used to generate this message (null for user messages)
+  promptTokens?: number;
+  completionTokens?: number;
+}
+
+export class ChatMessageModel {
+  id: number;
+  content: string;
+  isUser: boolean;
+  aiModel?: string;
+  promptTokens?: number;
+  completionTokens?: number;
+
+  constructor(id: number, content: string, isUser: boolean, aiModel?: string, promptTokens?: number, completionTokens?: number) {
+    this.id = id;
+    this.content = content;
+    this.isUser = isUser;
+    this.aiModel = aiModel;
+    this.promptTokens = promptTokens;
+    this.completionTokens = completionTokens;
+    
+    // Make this object and its properties observable
+    makeAutoObservable(this);
+  }
+
+  // Create a user message
+  static createUserMessage(id: number, content: string): ChatMessageModel {
+    return new ChatMessageModel(id, content, true);
+  }
+
+  // Create an assistant message
+  static createAssistantMessage(id: number, content: string, aiModel?: string, promptTokens?: number, completionTokens?: number): ChatMessageModel {
+    return new ChatMessageModel(id, content, false, aiModel, promptTokens, completionTokens);
+  }
+
+  // Convert to API message format
+  toApiMessage(): { role: 'user' | 'assistant'; content: string } {
+    return {
+      role: this.isUser ? 'user' : 'assistant',
+      content: this.content
+    };
+  }
+
+  // Serialization support
+  toJSON(): object {
+    return {
+      id: this.id,
+      content: this.content,
+      isUser: this.isUser,
+      aiModel: this.aiModel,
+      promptTokens: this.promptTokens,
+      completionTokens: this.completionTokens
+    };
+  }
+
+  // Create from plain object (deserialization)
+  static fromJSON(json: ChatMessageJSON): ChatMessageModel {
+    return new ChatMessageModel(
+      json.id,
+      json.content,
+      json.isUser,
+      json.aiModel,
+      json.promptTokens,
+      json.completionTokens
+    );
+  }
+} 

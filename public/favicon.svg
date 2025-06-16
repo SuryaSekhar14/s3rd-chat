@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <defs>
+    <linearGradient id="gradientPrimary" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#5046FF" />
+      <stop offset="100%" stop-color="#9333EA" />
+    </linearGradient>
+    <linearGradient id="gradientSecondary" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#2563EB" />
+      <stop offset="100%" stop-color="#9333EA" />
+    </linearGradient>
+    <linearGradient id="gradientNetwork" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10B981" />
+      <stop offset="100%" stop-color="#06B6D4" />
+    </linearGradient>
+    <filter id="nodeGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="1.5" result="blurNode" />
+      <feComposite in="SourceGraphic" in2="blurNode" operator="over" />
+    </filter>
+  </defs>
+  
+  <!-- Group everything and center -->
+  <g transform="translate(-25, -25) scale(1.5) ">
+    <!-- Left chat bubble -->
+    <path 
+      d="M30 30C25 30 21 34 21 39V60L30 51C30.5 50.5 31.2 50.2 31.9 50.2H48C53 50.2 57 46.2 57 41.2V39C57 34 53 30 48 30H30Z" 
+      fill="url(#gradientPrimary)"
+    />
+    
+    <!-- Right chat bubble -->
+    <path 
+      d="M70 70C75 70 79 66 79 61V40L70 49C69.5 49.5 68.8 49.8 68.1 49.8H52C47 49.8 43 53.8 43 58.8V61C43 66 47 70 52 70H70Z" 
+      fill="url(#gradientSecondary)"
+      opacity="0.95"
+    />
+    
+    <!-- Connection/AI Network -->
+    <g stroke-linecap="round">
+      <!-- Connection Lines -->
+      <line x1="42" y1="42" x2="68" y2="52" stroke="#2DD4BF" stroke-width="2" opacity="0.7" />
+      <line x1="42" y1="42" x2="50" y2="55" stroke="#22D3EE" stroke-width="2" opacity="0.7" />
+      <line x1="68" y1="52" x2="50" y2="55" stroke="#0EA5E9" stroke-width="2" opacity="0.7" />
+      
+      <!-- Nodes -->
+      <circle cx="42" cy="42" r="4" fill="#10B981" filter="url(#nodeGlow)" />
+      <circle cx="68" cy="52" r="4" fill="#06B6D4" filter="url(#nodeGlow)" />
+      <circle cx="50" cy="55" r="6" fill="url(#gradientNetwork)" stroke="#2DD4BF" stroke-width="1" filter="url(#nodeGlow)" />
+    </g>
+  </g>
+</svg> 
