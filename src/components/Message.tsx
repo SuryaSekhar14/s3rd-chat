@@ -195,22 +195,16 @@ export const Message = React.memo(function Message({
       <div
         className={`flex ${isUser ? "flex-row-reverse" : "flex-row"} ${isUser ? "max-w-[85%]" : "max-w-[98%]"} gap-1 md:gap-2`}
       >
-        {!isUser && (
-          <Avatar className="h-6 w-6 md:h-8 md:w-8 flex-shrink-0">
-            <AvatarFallback className="text-xs md:text-sm">AI</AvatarFallback>
-          </Avatar>
-        )}
         <div
           className="flex flex-col items-start w-full group"
           onMouseEnter={() => !isUser && setIsHovered(true)}
           onMouseLeave={() => !isUser && setIsHovered(false)}
         >
           <div
-            className={`py-2 md:py-3 px-3 md:px-4 rounded-2xl ${
-              isUser
+            className={`py-2 md:py-3 px-3 md:px-4 rounded-2xl ${isUser
                 ? "bg-slate-800 text-white rounded-tr-none dark:bg-gray-100 dark:text-black"
                 : "bg-background rounded-tl-none"
-            }`}
+              }`}
           >
             {isUser ? (
               <pre className="text-xs md:text-sm whitespace-pre-wrap break-words font-sans">
@@ -239,13 +233,13 @@ export const Message = React.memo(function Message({
                 </Button>
                 {(typeof promptTokens === "number" ||
                   typeof completionTokens === "number") && (
-                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <LucideCircleDollarSign className="h-4 w-4" />
-                    <span>
-                      {(promptTokens || 0) + (completionTokens || 0)} Tokens
-                    </span>
-                  </div>
-                )}
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <LucideCircleDollarSign className="h-4 w-4" />
+                      <span>
+                        {(promptTokens || 0) + (completionTokens || 0)} Tokens
+                      </span>
+                    </div>
+                  )}
               </div>
             </div>
           )}

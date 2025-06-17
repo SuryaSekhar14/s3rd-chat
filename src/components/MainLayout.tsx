@@ -113,7 +113,7 @@ export function MainLayout({ children }: MainLayoutProps) {
         </Button>
       )}
       <div className="flex-1 overflow-hidden relative">
-        <div className="absolute top-4 right-6 z-30 flex items-center gap-2">
+        <div className="absolute top-4 right-4 z-30 flex items-center gap-2">
           <button
             className="bg-muted/80 hover:bg-muted border border-border shadow-lg rounded-full p-1.5 transition-colors duration-200 hover:scale-105"
             onClick={() => router.push("/settings")}
