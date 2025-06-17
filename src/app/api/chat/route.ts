@@ -5,7 +5,9 @@ import { defaultModel } from "@/lib/config";
 import { defaultSystemPrompt, personaPrompts } from "@/lib/prompts";
 import { DatabaseService } from "@/lib/database";
 import { getModelProvider, isModelSupported } from "@/lib/aiProviders";
-import { ModelId } from "@/lib/models";
+import { ModelId, hasNativeWebSearch, getWebSearchApproach } from "@/lib/models";
+import { google } from "@ai-sdk/google";
+import { openai } from "@ai-sdk/openai";
 
 export const POST = AuthenticatedEdgeRequest(async (req: NextRequest, { userId }: { userId: string }) => {
   try {
@@ -57,6 +59,25 @@ export const POST = AuthenticatedEdgeRequest(async (req: NextRequest, { userId }
       ? defaultSystemPrompt + "\n\n" + personaPrompts[persona as keyof typeof personaPrompts].prompt
       : defaultSystemPrompt;
 
+    const webSearchApproach = getWebSearchApproach(modelId);
+    console.log(`[Chat API] Using ${webSearchApproach} web search approach for model: ${modelId}`);
+
+    const webSearchInstructions = `
+**Web Search Capabilities:**
+You have access to web search functionality to provide up-to-date information. Use web search when:
+- Users ask about current events, news, or recent developments
+- Questions require real-time or time-sensitive information
+- Users ask about specific facts, statistics, or data that may have changed
+- Topics require the latest information that might not be in your training data
+- Users explicitly ask you to search for something
+
+When using web search, provide the search results in a clear, organized manner and cite your sources when possible.
+`;
+
+    const finalSystemPrompt = webSearchApproach === 'native' 
+      ? systemPrompt + "\n\n" + webSearchInstructions
+      : systemPrompt;
+
     // Handle database operations in parallel without blocking streaming
     const dbOperations = (async () => {
       try {
@@ -81,12 +102,33 @@ export const POST = AuthenticatedEdgeRequest(async (req: NextRequest, { userId }
 
     await dbOperations;
 
+    let finalModel = aiModel;
+    let tools = undefined;
+
+    if (webSearchApproach === 'native') {
+      if (modelId.startsWith('gemini-')) {
+        finalModel = google(modelId, {
+          useSearchGrounding: true,
+        });
+        console.log(`[Chat API] Enabled native web search for Gemini model: ${modelId}`);
+      } else if (modelId.startsWith('gpt-4o')) {
+        tools = {
+          web_search_preview: openai.tools.webSearchPreview(),
+        };
+        console.log(`[Chat API] Enabled native web search for OpenAI model: ${modelId}`);
+      }
+    } else {
+      console.log(`[Chat API] No web search available for model: ${modelId}`);
+    }
+
     // Start streaming immediately while handling database operations in parallel
     const result = streamText({
-      model: aiModel,
+      model: finalModel,
       messages,
-      system: systemPrompt,
-      onFinish: async ({ text, finishReason, usage }) => {
+      system: finalSystemPrompt,
+      tools,
+      maxSteps: tools ? 3 : 1,
+      onFinish: async ({ text, finishReason, usage, toolResults }) => {
         console.log(`[Chat API] Conversation finished for chat ${id}. Reason: ${finishReason}`);
         console.log(`[Chat API] Used ${usage.promptTokens} prompt tokens and ${usage.completionTokens} completion tokens for chat ${id}`);
 

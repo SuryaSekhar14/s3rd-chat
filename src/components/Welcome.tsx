@@ -2,7 +2,7 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { MessageSquarePlus } from "lucide-react";
+import { MessageSquarePlus, Sparkles, Globe, Zap } from "lucide-react";
 import Image from "next/image";
 
 interface WelcomeProps {
@@ -13,9 +13,8 @@ interface WelcomeProps {
 export function Welcome({ onCreateChat, isCreating = false }: WelcomeProps) {
   return (
     <div className="flex items-center justify-center h-full p-8">
-      <div className="max-w-md w-full space-y-8 text-center">
-        {/* Logo */}
-        <div className="space-y-6">
+      <div className="max-w-4xl w-full space-y-8">
+        <div className="text-center space-y-6">
           <div className="w-20 h-20 mx-auto">
             <Image
               src="/logo.svg"
@@ -30,14 +29,40 @@ export function Welcome({ onCreateChat, isCreating = false }: WelcomeProps) {
             <h1 className="text-3xl font-bold">
               Welcome to S3RD Chat
             </h1>
-            <p className="text-muted-foreground">
-              Your intelligent AI companion for meaningful conversations
+            <p className="text-muted-foreground text-lg">
+              Your intelligent AI companion with web search capabilities
+            </p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+          <div className="p-4 bg-muted/50 rounded-lg text-center">
+            <Sparkles className="w-8 h-8 mx-auto mb-2 text-primary" />
+            <h3 className="font-semibold mb-1">Multi-Model AI</h3>
+            <p className="text-sm text-muted-foreground">
+              Chat with GPT-4o, Claude, Gemini, and DeepSeek
+            </p>
+          </div>
+          
+          <div className="p-4 bg-muted/50 rounded-lg text-center">
+            <Globe className="w-8 h-8 mx-auto mb-2 text-primary" />
+            <h3 className="font-semibold mb-1">Web Search</h3>
+            <p className="text-sm text-muted-foreground">
+              Get up-to-date information from the web
+            </p>
+          </div>
+          
+          <div className="p-4 bg-muted/50 rounded-lg text-center">
+            <Zap className="w-8 h-8 mx-auto mb-2 text-primary" />
+            <h3 className="font-semibold mb-1">Real-time</h3>
+            <p className="text-sm text-muted-foreground">
+              Fast, streaming responses with conversation history
             </p>
           </div>
         </div>
 
         {/* CTA */}
-        <div className="space-y-4">
+        <div className="text-center space-y-4">
           <Button
             onClick={onCreateChat}
             size="lg"

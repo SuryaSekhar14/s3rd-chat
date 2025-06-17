@@ -50,14 +50,14 @@ export const models: ModelInfo[] = [
     name: 'GPT-4o', 
     icon: 'openai',
     provider: 'OpenAI',
-    capabilities: { vision: true, documents: true, coding: true }
+    capabilities: { vision: true, web: true, documents: true, coding: true }
   },
   { 
     id: 'gpt-4o-mini', 
     name: 'GPT-4o Mini', 
     icon: 'openai',
     provider: 'OpenAI',
-    capabilities: { vision: true, coding: true }
+    capabilities: { vision: true, web: true, coding: true }
   },
   { 
     id: 'claude-4-sonnet-20250514', 
@@ -100,4 +100,18 @@ export const models: ModelInfo[] = [
 ];
 
 // Default model to use
-export const defaultModel: ModelId = "gpt-4o-mini"; 
+export const defaultModel: ModelId = "gpt-4o-mini";
+
+export function hasNativeWebSearch(modelId: string): boolean {
+  const modelsWithWebSearch = [
+    'gpt-4o',
+    'gpt-4o-mini',
+    'gemini-2.5-flash-preview-04-17',
+    'gemini-2.5-pro-exp-03-25'
+  ];
+  return modelsWithWebSearch.includes(modelId);
+}
+
+export function getWebSearchApproach(modelId: string): 'native' | 'none' {
+  return hasNativeWebSearch(modelId) ? 'native' : 'none';
+} 
