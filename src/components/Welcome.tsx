@@ -33,8 +33,8 @@ export function Welcome({ onCreateChat, isCreating = false }: WelcomeProps) {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          <div className="p-4 bg-muted/50 rounded-lg text-center">
+        <div className="flex flex-row gap-4 mb-8">
+          <div className="flex-1 p-4 bg-muted/50 rounded-lg text-center">
             <Sparkles className="w-8 h-8 mx-auto mb-2 text-primary" />
             <h3 className="font-semibold mb-1">Multi-Model AI</h3>
             <p className="text-sm text-muted-foreground">
@@ -42,7 +42,7 @@ export function Welcome({ onCreateChat, isCreating = false }: WelcomeProps) {
             </p>
           </div>
 
-          <div className="p-4 bg-muted/50 rounded-lg text-center">
+          <div className="flex-1 p-4 bg-muted/50 rounded-lg text-center">
             <Globe className="w-8 h-8 mx-auto mb-2 text-primary" />
             <h3 className="font-semibold mb-1">Web Search</h3>
             <p className="text-sm text-muted-foreground">
@@ -50,7 +50,7 @@ export function Welcome({ onCreateChat, isCreating = false }: WelcomeProps) {
             </p>
           </div>
 
-          <div className="p-4 bg-muted/50 rounded-lg text-center">
+          <div className="flex-1 p-4 bg-muted/50 rounded-lg text-center">
             <Zap className="w-8 h-8 mx-auto mb-2 text-primary" />
             <h3 className="font-semibold mb-1">Real-time</h3>
             <p className="text-sm text-muted-foreground">
