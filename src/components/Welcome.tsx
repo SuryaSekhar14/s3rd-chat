@@ -24,11 +24,9 @@ export function Welcome({ onCreateChat, isCreating = false }: WelcomeProps) {
               className="w-full h-full"
             />
           </div>
-          
+
           <div className="space-y-3">
-            <h1 className="text-3xl font-bold">
-              Welcome to S3RD Chat
-            </h1>
+            <h1 className="text-3xl font-bold">Welcome to S3RD Chat</h1>
             <p className="text-muted-foreground text-lg">
               Your intelligent AI companion with web search capabilities
             </p>
@@ -43,7 +41,7 @@ export function Welcome({ onCreateChat, isCreating = false }: WelcomeProps) {
               Chat with GPT-4o, Claude, Gemini, and DeepSeek
             </p>
           </div>
-          
+
           <div className="p-4 bg-muted/50 rounded-lg text-center">
             <Globe className="w-8 h-8 mx-auto mb-2 text-primary" />
             <h3 className="font-semibold mb-1">Web Search</h3>
@@ -51,7 +49,7 @@ export function Welcome({ onCreateChat, isCreating = false }: WelcomeProps) {
               Get up-to-date information from the web
             </p>
           </div>
-          
+
           <div className="p-4 bg-muted/50 rounded-lg text-center">
             <Zap className="w-8 h-8 mx-auto mb-2 text-primary" />
             <h3 className="font-semibold mb-1">Real-time</h3>
@@ -81,7 +79,7 @@ export function Welcome({ onCreateChat, isCreating = false }: WelcomeProps) {
               </>
             )}
           </Button>
-          
+
           <p className="text-sm text-muted-foreground">
             Type your message below to begin
           </p>
@@ -89,4 +87,4 @@ export function Welcome({ onCreateChat, isCreating = false }: WelcomeProps) {
       </div>
     </div>
   );
-} 
+}

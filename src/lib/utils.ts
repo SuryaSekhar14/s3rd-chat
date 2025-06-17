@@ -8,12 +8,14 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function truncateTitle(title: string, maxLength?: number) {
-  const effectiveMaxLength = maxLength ?? (() => {
-    const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
-    return isMobile
-      ? uiConfig.maxHeaderChatTitleLengthMobile
-      : uiConfig.maxHeaderChatTitleLengthDesktop;
-  })();
+  const effectiveMaxLength =
+    maxLength ??
+    (() => {
+      const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
+      return isMobile
+        ? uiConfig.maxHeaderChatTitleLengthMobile
+        : uiConfig.maxHeaderChatTitleLengthDesktop;
+    })();
 
   if (title.length <= effectiveMaxLength) return title;
   return `${title.slice(0, effectiveMaxLength)}...`;

@@ -26,4 +26,4 @@ export default function ChatPage() {
   }
 
   return <Loading text="Redirecting..." />;
-} 
+}

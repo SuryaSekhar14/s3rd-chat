@@ -31,9 +31,9 @@ export default function ChatIdPage() {
     const loadSpecificChat = async () => {
       try {
         console.log("[ChatIdPage] Attempting to load chat:", chatId);
-        
+
         const success = await chatViewModel.loadSpecificChat(chatId);
-        
+
         if (success) {
           console.log("[ChatIdPage] Chat loaded successfully");
           setIsLoadingChat(false);
@@ -59,4 +59,4 @@ export default function ChatIdPage() {
       <Chat />
     </MainLayout>
   );
-} 
+}

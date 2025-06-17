@@ -40,20 +40,22 @@ export const ViewModelProvider = observer(function ViewModelProvider({
     const methodsWithUserState = {
       ...databaseMethods,
       isUserLoaded: isLoaded,
-      userId: user?.id
+      userId: user?.id,
     };
-    
+
     chatViewModel.setDatabaseMethods(methodsWithUserState);
     sidebarViewModel.setDatabaseMethods(methodsWithUserState);
-    
+
     // Connect the view models for coordination
     chatViewModel.setSidebarViewModel({
-      revalidateChatSummaries: () => sidebarViewModel.revalidateChatSummaries()
+      revalidateChatSummaries: () => sidebarViewModel.revalidateChatSummaries(),
     });
-    
+
     // Trigger sync when user becomes authenticated
     if (isLoaded && user?.id) {
-      console.log("[ViewModelProvider] User authenticated, triggering database sync");
+      console.log(
+        "[ViewModelProvider] User authenticated, triggering database sync",
+      );
       setTimeout(() => {
         sidebarViewModel.syncOnAuthentication();
       }, 0);
@@ -65,4 +67,4 @@ export const ViewModelProvider = observer(function ViewModelProvider({
       {children}
     </ViewModelContext.Provider>
   );
-}); 
+});

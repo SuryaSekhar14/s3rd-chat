@@ -82,7 +82,7 @@ export const ChatInput = observer(function ChatInput({
     {
       enableOnFormTags: ["TEXTAREA"],
       preventDefault: true,
-    }
+    },
   );
 
   // Setup utility hotkeys
@@ -182,7 +182,7 @@ export const ChatInput = observer(function ChatInput({
       };
       animateFrame(start);
     },
-    [setInput]
+    [setInput],
   );
 
   const onSubmit = (e: React.FormEvent) => {
@@ -198,12 +198,12 @@ export const ChatInput = observer(function ChatInput({
 
     const maxX = particlesRef.current.reduce(
       (prev, current) => (current.x > prev ? current.x : prev),
-      0
+      0,
     );
     animate(maxX);
     handleSubmit(
       e,
-      uploadedImages.length > 0 ? uploadedImages[0].url : undefined
+      uploadedImages.length > 0 ? uploadedImages[0].url : undefined,
     );
 
     setUploadedImages([]);
@@ -211,7 +211,6 @@ export const ChatInput = observer(function ChatInput({
   };
 
   const handleImageUploaded = (imageUrl: string) => {
-
     const filename = imageUrl.split("/").pop()?.split("?")[0] || "image";
     setUploadedImages((prev) => [...prev, { url: imageUrl, filename }]);
     setShowImageUpload(false);
@@ -219,14 +218,13 @@ export const ChatInput = observer(function ChatInput({
 
   const handleRemoveImage = (indexToRemove: number) => {
     setUploadedImages((prev) =>
-      prev.filter((_, index) => index !== indexToRemove)
+      prev.filter((_, index) => index !== indexToRemove),
     );
   };
 
   const handlePaste = async (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
     const items = e.clipboardData?.items;
     if (!items) return;
-
 
     for (let i = 0; i < items.length; i++) {
       const item = items[i];
@@ -238,7 +236,7 @@ export const ChatInput = observer(function ChatInput({
         if (file) {
           if (file.type === "image/svg+xml") {
             showToast.error(
-              "SVG images are not supported. Please use JPG, PNG, or GIF."
+              "SVG images are not supported. Please use JPG, PNG, or GIF.",
             );
             continue;
           }
@@ -248,7 +246,6 @@ export const ChatInput = observer(function ChatInput({
             continue;
           }
 
-  
           const maxSize = 10 * 1024 * 1024;
           if (file.size > maxSize) {
             showToast.error("Image must be smaller than 10MB.");
@@ -256,15 +253,14 @@ export const ChatInput = observer(function ChatInput({
           }
 
           try {
-
             const response = await fetch(
               `/api/upload-image?filename=${encodeURIComponent(
-                file.name || "pasted-image"
+                file.name || "pasted-image",
               )}`,
               {
                 method: "POST",
                 body: file,
-              }
+              },
             );
 
             if (!response.ok) {
@@ -416,7 +412,10 @@ export const ChatInput = observer(function ChatInput({
             <Button
               type="submit"
               className="h-8 px-2 md:px-4"
-              disabled={chatViewModel.generating || (!input.trim() && uploadedImages.length === 0)}
+              disabled={
+                chatViewModel.generating ||
+                (!input.trim() && uploadedImages.length === 0)
+              }
             >
               {getSubmitButton(os)}
             </Button>

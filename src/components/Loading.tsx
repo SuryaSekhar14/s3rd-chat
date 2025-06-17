@@ -18,7 +18,9 @@ export function Loading({
   spinnerClassName = "h-8 w-8 md:h-10 md:w-10",
 }: LoadingProps) {
   return (
-    <div className={`flex flex-col items-center justify-center h-full w-full ${className}`}>
+    <div
+      className={`flex flex-col items-center justify-center h-full w-full ${className}`}
+    >
       <LoadingSpinner className={spinnerClassName} />
       {text && (
         <p className="text-muted-foreground mt-4 text-sm md:text-base animate-pulse">
@@ -27,4 +29,4 @@ export function Loading({
       )}
     </div>
   );
-} 
+}

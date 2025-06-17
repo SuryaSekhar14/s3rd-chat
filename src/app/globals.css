@@ -141,7 +141,9 @@
   margin: 0.5rem 0;
 }
 
-.markdown-content h4, .markdown-content h5, .markdown-content h6 {
+.markdown-content h4,
+.markdown-content h5,
+.markdown-content h6 {
   font-size: 1rem;
   font-weight: 600;
   margin: 0.25rem 0;
@@ -184,7 +186,9 @@
 
 /* Code highlighting improvements */
 .markdown-content code {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-family:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+    "Courier New", monospace;
   font-size: 0.9em;
 }
 

@@ -72,15 +72,16 @@ export const ChatContextMenu: React.FC<ChatContextMenuProps> = ({
         >
           <MagicWandIcon className="h-4 w-4 mr-2" /> Generate title
         </ContextMenuItem>
-        <ContextMenuItem
-          onClick={() => onExportChat(chat.id, chat.title)}
-        >
+        <ContextMenuItem onClick={() => onExportChat(chat.id, chat.title)}>
           <DownloadIcon className="h-4 w-4 mr-2" /> Export
         </ContextMenuItem>
-        <ContextMenuItem variant="destructive" onClick={() => onDeleteChat(chat.id)}>
+        <ContextMenuItem
+          variant="destructive"
+          onClick={() => onDeleteChat(chat.id)}
+        >
           <TrashIcon className="h-4 w-4 mr-2" /> Delete
         </ContextMenuItem>
       </ContextMenuContent>
     </ContextMenu>
   );
-}; 
+};

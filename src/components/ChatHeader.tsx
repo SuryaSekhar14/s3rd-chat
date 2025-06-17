@@ -11,7 +11,7 @@ export const ChatHeader = observer(() => {
   const chatViewModel = useChatViewModel();
   const activeChat = chatViewModel.activeChat;
   const isGenerating = chatViewModel.generating;
-  
+
   const isEditing = chatViewModel.titleEditing;
   const editedTitle = chatViewModel.currentEditedTitle;
   const isGeneratingTitle = chatViewModel.titleGenerating;
@@ -34,10 +34,7 @@ export const ChatHeader = observer(() => {
       <div className="flex w-full flex-wrap md:flex-nowrap items-center">
         <div className="flex items-center min-w-0">
           {isEditing ? (
-            <form
-              className="flex gap-2 flex-1 w-full"
-              onSubmit={handleSave}
-            >
+            <form className="flex gap-2 flex-1 w-full" onSubmit={handleSave}>
               <Input
                 autoFocus
                 value={editedTitle}

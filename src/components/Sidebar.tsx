@@ -10,7 +10,7 @@ import { useChatViewModel, useSidebarViewModel } from "@/hooks/useViewModel";
 import { ChatListItem } from "@/components/ChatListItem";
 import { ChatContextMenu } from "@/components/ChatContextMenu";
 import { UserSection } from "@/components/UserSection";
-import showToast from "@/lib/toast"
+import showToast from "@/lib/toast";
 import { PanelLeft, Pin } from "lucide-react";
 import { EditIcon } from "@/components/icons/EditIcon";
 import { TrashIcon } from "@/components/icons/TrashIcon";
@@ -20,12 +20,18 @@ import { MagicWandIcon } from "@/components/icons/MagicWandIcon";
 import { DownloadIcon } from "@/components/icons/DownloadIcon";
 import { handleExportConversation } from "@/lib/exportUtils";
 
-
-export const Sidebar = observer(function Sidebar({ onCollapse, isCollapsed }: { onCollapse?: () => void, isCollapsed?: boolean }) {
+export const Sidebar = observer(function Sidebar({
+  onCollapse,
+  isCollapsed,
+}: {
+  onCollapse?: () => void;
+  isCollapsed?: boolean;
+}) {
   const chatViewModel = useChatViewModel();
   const sidebarViewModel = useSidebarViewModel();
-  const { pinnedChats, pinChat, unpinChat, isPinned, updatePinnedChatTitle } = usePinnedChats();
-  
+  const { pinnedChats, pinChat, unpinChat, isPinned, updatePinnedChatTitle } =
+    usePinnedChats();
+
   const chats = sidebarViewModel.allChatSummaries;
   const activeChat = chatViewModel.activeChat;
   const isGenerating = chatViewModel.generating;
@@ -42,15 +48,18 @@ export const Sidebar = observer(function Sidebar({ onCollapse, isCollapsed }: { 
 
   // Filter out pinned chats from regular chats
   const unpinnedChats = useMemo(() => {
-    const pinnedIds = new Set(pinnedChats.map(chat => chat.id));
-    return sortedChats.filter(chat => !pinnedIds.has(chat.id));
+    const pinnedIds = new Set(pinnedChats.map((chat) => chat.id));
+    return sortedChats.filter((chat) => !pinnedIds.has(chat.id));
   }, [sortedChats, pinnedChats]);
 
   // Refs for each chat item
-  const chatItemRefs = useRef<Record<string, React.RefObject<ChatListItemHandle | null>>>({});
-  sortedChats.forEach(chat => {
+  const chatItemRefs = useRef<
+    Record<string, React.RefObject<ChatListItemHandle | null>>
+  >({});
+  sortedChats.forEach((chat) => {
     if (!chatItemRefs.current[chat.id]) {
-      chatItemRefs.current[chat.id] = React.createRef<ChatListItemHandle | null>();
+      chatItemRefs.current[chat.id] =
+        React.createRef<ChatListItemHandle | null>();
     }
   });
 
@@ -65,7 +74,7 @@ export const Sidebar = observer(function Sidebar({ onCollapse, isCollapsed }: { 
       const success = await chatViewModel.loadSpecificChat(id);
       if (success) {
         // Update the URL without causing navigation using history API
-        window.history.replaceState(null, '', `/chat/${id}`);
+        window.history.replaceState(null, "", `/chat/${id}`);
         sidebarViewModel.setActiveChatId(id);
       } else {
         showToast.error("Failed to load chat");
@@ -104,7 +113,7 @@ export const Sidebar = observer(function Sidebar({ onCollapse, isCollapsed }: { 
       const success = await chatViewModel.loadSpecificChat(result.chatId);
       if (success) {
         // Update URL without causing navigation using history API
-        window.history.replaceState(null, '', `/chat/${result.chatId}`);
+        window.history.replaceState(null, "", `/chat/${result.chatId}`);
         sidebarViewModel.setActiveChatId(result.chatId);
         showToast.success("New chat created");
       } else {
@@ -121,7 +130,12 @@ export const Sidebar = observer(function Sidebar({ onCollapse, isCollapsed }: { 
   };
 
   const handleExportChat = async (chatId: string, title: string) => {
-    await handleExportConversation(chatId, title, chatViewModel.loadSpecificChat, () => chatViewModel.activeChat);
+    await handleExportConversation(
+      chatId,
+      title,
+      chatViewModel.loadSpecificChat,
+      () => chatViewModel.activeChat,
+    );
   };
 
   return (
@@ -176,8 +190,8 @@ export const Sidebar = observer(function Sidebar({ onCollapse, isCollapsed }: { 
                 Pinned Chats
               </div>
               {pinnedChats.map((pinnedChat) => {
-                const chat = chats.find(c => c.id === pinnedChat.id);
-                
+                const chat = chats.find((c) => c.id === pinnedChat.id);
+
                 // If chat data isn't loaded yet, use the stored pinned chat data
                 if (!chat) {
                   return (
@@ -190,7 +204,7 @@ export const Sidebar = observer(function Sidebar({ onCollapse, isCollapsed }: { 
                         createdAt: pinnedChat.pinnedAt,
                         updatedAt: pinnedChat.pinnedAt,
                         lastEditedAt: pinnedChat.pinnedAt,
-                        persona: 'none'
+                        persona: "none",
                       }}
                       chatItemRef={chatItemRefs.current[pinnedChat.id]}
                       isActive={false}
@@ -205,7 +219,7 @@ export const Sidebar = observer(function Sidebar({ onCollapse, isCollapsed }: { 
                     />
                   );
                 }
-                
+
                 return (
                   <ChatContextMenu
                     key={pinnedChat.id}

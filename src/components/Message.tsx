@@ -18,27 +18,27 @@ import "katex/dist/katex.min.css";
 
 // Helper function to get plain text from React children
 const getTextContent = (node: ReactNode): string => {
-  if (typeof node === 'string') return node;
-  if (typeof node === 'number') return String(node);
-  if (node === null || node === undefined) return '';
-  
+  if (typeof node === "string") return node;
+  if (typeof node === "number") return String(node);
+  if (node === null || node === undefined) return "";
+
   if (Array.isArray(node)) {
-    return node.map(getTextContent).join('');
+    return node.map(getTextContent).join("");
   }
-  
-  if (typeof node === 'object') {
+
+  if (typeof node === "object") {
     const props = (node as any).props;
     if (props?.children) {
       return getTextContent(props.children);
     }
   }
-  
-  return '';
+
+  return "";
 };
 
 const copyToClipboard = (text: string, language: string) => {
-  navigator.clipboard.writeText(text.replace(/\n$/, ''));
-  showToast.custom(`${language || 'Code'} copied to clipboard`, "📋");
+  navigator.clipboard.writeText(text.replace(/\n$/, ""));
+  showToast.custom(`${language || "Code"} copied to clipboard`, "📋");
 };
 
 const copyMessageToClipboard = (content: string) => {
@@ -48,9 +48,9 @@ const copyMessageToClipboard = (content: string) => {
 
 const markdownComponents = {
   code({ node, inline, className, children, ...props }: any) {
-    const match = /language-(\w+)/.exec(className || '');
-    const language = match ? match[1] : '';
-    
+    const match = /language-(\w+)/.exec(className || "");
+    const language = match ? match[1] : "";
+
     return !inline && match ? (
       <div className="mt-1 md:mt-2 mb-1 md:mb-2 overflow-hidden rounded-md border border-neutral-200 dark:border-neutral-800">
         <div className="flex items-center justify-between px-2 md:px-4 py-1 bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-200 text-[0.65rem] md:text-xs border-b border-neutral-200 dark:border-neutral-700">
@@ -70,7 +70,10 @@ const markdownComponents = {
         </pre>
       </div>
     ) : (
-      <code className={`${className} bg-neutral-400 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-200 px-1 py-0.5 rounded text-[0.7rem] md:text-xs break-all`} {...props}>
+      <code
+        className={`${className} bg-neutral-400 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-200 px-1 py-0.5 rounded text-[0.7rem] md:text-xs break-all`}
+        {...props}
+      >
         {children}
       </code>
     );
@@ -103,9 +106,9 @@ const markdownComponents = {
   },
   a({ children, href }: any) {
     return (
-      <a 
-        href={href} 
-        target="_blank" 
+      <a
+        href={href}
+        target="_blank"
         rel="noopener noreferrer"
         className="text-blue-400 hover:underline"
       >
@@ -117,7 +120,9 @@ const markdownComponents = {
     return <ul className="list-disc pl-4 md:pl-5 my-1 md:my-2">{children}</ul>;
   },
   ol({ children }: any) {
-    return <ol className="list-decimal pl-4 md:pl-5 my-1 md:my-2">{children}</ol>;
+    return (
+      <ol className="list-decimal pl-4 md:pl-5 my-1 md:my-2">{children}</ol>
+    );
   },
   blockquote({ children }: any) {
     return (
@@ -127,14 +132,24 @@ const markdownComponents = {
     );
   },
   h1({ children }: any) {
-    return <h1 className="text-base md:text-lg font-bold my-2 md:my-3">{children}</h1>;
+    return (
+      <h1 className="text-base md:text-lg font-bold my-2 md:my-3">
+        {children}
+      </h1>
+    );
   },
   h2({ children }: any) {
-    return <h2 className="text-sm md:text-base font-bold my-2 md:my-3">{children}</h2>;
+    return (
+      <h2 className="text-sm md:text-base font-bold my-2 md:my-3">
+        {children}
+      </h2>
+    );
   },
   h3({ children }: any) {
-    return <h3 className="text-xs md:text-sm font-bold my-1 md:my-2">{children}</h3>;
-  }
+    return (
+      <h3 className="text-xs md:text-sm font-bold my-1 md:my-2">{children}</h3>
+    );
+  },
 };
 
 interface MessageProps {
@@ -144,12 +159,21 @@ interface MessageProps {
   readonly completionTokens?: number;
 }
 
-export const Message = React.memo(function Message({ content, isUser, promptTokens, completionTokens }: MessageProps) {
+export const Message = React.memo(function Message({
+  content,
+  isUser,
+  promptTokens,
+  completionTokens,
+}: MessageProps) {
   const [isHovered, setIsHovered] = useState(false);
   // Ensure content is always a string
-  const safeContent = typeof content === 'string' ? content : 
-    (content ? JSON.stringify(content) : '');
-  
+  const safeContent =
+    typeof content === "string"
+      ? content
+      : content
+        ? JSON.stringify(content)
+        : "";
+
   const markdownContent = useMemo(() => {
     if (isUser) return null;
 
@@ -165,8 +189,12 @@ export const Message = React.memo(function Message({ content, isUser, promptToke
   }, [safeContent, isUser]);
 
   return (
-    <div className={`flex ${isUser ? "justify-end" : "justify-start"} mb-2 md:mb-4`}>
-      <div className={`flex ${isUser ? "flex-row-reverse" : "flex-row"} ${isUser ? 'max-w-[85%]' : 'max-w-[98%]'} gap-1 md:gap-2`}>
+    <div
+      className={`flex ${isUser ? "justify-end" : "justify-start"} mb-2 md:mb-4`}
+    >
+      <div
+        className={`flex ${isUser ? "flex-row-reverse" : "flex-row"} ${isUser ? "max-w-[85%]" : "max-w-[98%]"} gap-1 md:gap-2`}
+      >
         {!isUser && (
           <Avatar className="h-6 w-6 md:h-8 md:w-8 flex-shrink-0">
             <AvatarFallback className="text-xs md:text-sm">AI</AvatarFallback>
@@ -179,8 +207,8 @@ export const Message = React.memo(function Message({ content, isUser, promptToke
         >
           <div
             className={`py-2 md:py-3 px-3 md:px-4 rounded-2xl ${
-              isUser 
-                ? "bg-slate-800 text-white rounded-tr-none dark:bg-gray-100 dark:text-black" 
+              isUser
+                ? "bg-slate-800 text-white rounded-tr-none dark:bg-gray-100 dark:text-black"
                 : "bg-background rounded-tl-none"
             }`}
           >
@@ -196,8 +224,9 @@ export const Message = React.memo(function Message({ content, isUser, promptToke
           </div>
           {!isUser && (
             <div className="flex w-full">
-              <div className={`flex items-center gap-2 mt-1 ml-1 transition-all duration-200
-                ${isHovered ? 'opacity-80 translate-y-0 pointer-events-auto' : 'opacity-0 translate-y-2 pointer-events-none'}`}
+              <div
+                className={`flex items-center gap-2 mt-1 ml-1 transition-all duration-200
+                ${isHovered ? "opacity-80 translate-y-0 pointer-events-auto" : "opacity-0 translate-y-2 pointer-events-none"}`}
               >
                 <Button
                   variant="ghost"
@@ -208,10 +237,13 @@ export const Message = React.memo(function Message({ content, isUser, promptToke
                 >
                   <CopyIcon className="h-4 w-4" />
                 </Button>
-                {(typeof promptTokens === 'number' || typeof completionTokens === 'number') && (
+                {(typeof promptTokens === "number" ||
+                  typeof completionTokens === "number") && (
                   <div className="flex items-center gap-1 text-xs text-muted-foreground">
                     <LucideCircleDollarSign className="h-4 w-4" />
-                    <span>{(promptTokens || 0) + (completionTokens || 0)} Tokens</span>
+                    <span>
+                      {(promptTokens || 0) + (completionTokens || 0)} Tokens
+                    </span>
                   </div>
                 )}
               </div>

@@ -1,5 +1,5 @@
-import { PrismaClient } from '../generated/prisma';
-import { ChatMessageJSON } from '@/models/ChatMessageModel';
+import { PrismaClient } from "../generated/prisma";
+import { ChatMessageJSON } from "@/models/ChatMessageModel";
 
 // Initialize Prisma client
 const globalForPrisma = globalThis as unknown as {
@@ -8,7 +8,7 @@ const globalForPrisma = globalThis as unknown as {
 
 export const prisma = globalForPrisma.prisma ?? new PrismaClient();
 
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
+if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
 
 export class DatabaseService {
   /**
@@ -17,18 +17,18 @@ export class DatabaseService {
   static async getOrCreateUser(clerkUserId: string) {
     try {
       let user = await prisma.user.findUnique({
-        where: { clerkUserId }
+        where: { clerkUserId },
       });
 
       if (!user) {
         user = await prisma.user.create({
-          data: { clerkUserId }
+          data: { clerkUserId },
         });
       }
 
       return user;
     } catch (error) {
-      console.error('Error getting or creating user:', error);
+      console.error("Error getting or creating user:", error);
       throw error;
     }
   }
@@ -39,7 +39,7 @@ export class DatabaseService {
   static async getUserConversations(clerkUserId: string) {
     try {
       const user = await this.getOrCreateUser(clerkUserId);
-      
+
       const conversations = await prisma.conversation.findMany({
         where: { userId: user.id },
         select: {
@@ -49,16 +49,16 @@ export class DatabaseService {
           updatedAt: true,
           _count: {
             select: {
-              messages: true
-            }
-          }
+              messages: true,
+            },
+          },
         },
-        orderBy: { updatedAt: 'desc' }
+        orderBy: { updatedAt: "desc" },
       });
 
       return conversations;
     } catch (error) {
-      console.error('Error getting user conversations:', error);
+      console.error("Error getting user conversations:", error);
       throw error;
     }
   }
@@ -66,21 +66,25 @@ export class DatabaseService {
   /**
    * Create a new conversation
    */
-  static async createConversation(clerkUserId: string, conversationId: string, title = "New Chat") {
+  static async createConversation(
+    clerkUserId: string,
+    conversationId: string,
+    title = "New Chat",
+  ) {
     try {
       const user = await this.getOrCreateUser(clerkUserId);
-      
+
       const conversation = await prisma.conversation.create({
         data: {
           id: conversationId,
           userId: user.id,
-          title
-        }
+          title,
+        },
       });
 
       return conversation;
     } catch (error) {
-      console.error('Error creating conversation:', error);
+      console.error("Error creating conversation:", error);
       throw error;
     }
   }
@@ -92,14 +96,14 @@ export class DatabaseService {
     try {
       const conversation = await prisma.conversation.update({
         where: { id: conversationId },
-        data: { 
-          title
-        }
+        data: {
+          title,
+        },
       });
 
       return conversation;
     } catch (error) {
-      console.error('Error updating conversation title:', error);
+      console.error("Error updating conversation title:", error);
       throw error;
     }
   }
@@ -110,10 +114,10 @@ export class DatabaseService {
   static async deleteConversation(conversationId: string) {
     try {
       await prisma.conversation.delete({
-        where: { id: conversationId }
+        where: { id: conversationId },
       });
     } catch (error) {
-      console.error('Error deleting conversation:', error);
+      console.error("Error deleting conversation:", error);
       throw error;
     }
   }
@@ -122,11 +126,11 @@ export class DatabaseService {
    * Add a single message to a conversation
    */
   static async addMessage(
-    conversationId: string, 
-    content: string, 
-    isUser: boolean, 
+    conversationId: string,
+    content: string,
+    isUser: boolean,
     tokenData?: { promptTokens?: number; completionTokens?: number },
-    aiModel?: string
+    aiModel?: string,
   ) {
     try {
       const message = await prisma.message.create({
@@ -137,18 +141,18 @@ export class DatabaseService {
           aiModel: isUser ? null : aiModel, // Only set aiModel for AI messages
           promptTokens: tokenData?.promptTokens,
           completionTokens: tokenData?.completionTokens,
-        }
+        },
       });
 
       // Update conversation timestamp
       await prisma.conversation.update({
         where: { id: conversationId },
-        data: { updatedAt: new Date() }
+        data: { updatedAt: new Date() },
       });
 
       return message;
     } catch (error) {
-      console.error('Error adding message:', error);
+      console.error("Error adding message:", error);
       throw error;
     }
   }
@@ -156,11 +160,15 @@ export class DatabaseService {
   /**
    * Save messages to a conversation (replaces all messages - legacy method)
    */
-  static async saveMessages(conversationId: string, messages: ChatMessageJSON[], clerkUserId?: string) {
+  static async saveMessages(
+    conversationId: string,
+    messages: ChatMessageJSON[],
+    clerkUserId?: string,
+  ) {
     try {
       // First, ensure the conversation exists
       const conversation = await prisma.conversation.findUnique({
-        where: { id: conversationId }
+        where: { id: conversationId },
       });
 
       // If conversation doesn't exist and we have clerkUserId, create it
@@ -170,7 +178,7 @@ export class DatabaseService {
 
       // Delete existing messages for this conversation
       await prisma.message.deleteMany({
-        where: { conversationId }
+        where: { conversationId },
       });
 
       // Insert new messages
@@ -181,18 +189,18 @@ export class DatabaseService {
             content: message.content,
             isUser: message.isUser,
             aiModel: message.isUser ? null : message.aiModel,
-            createdAt: new Date(Date.now() + index) // Ensure proper ordering
-          }))
+            createdAt: new Date(Date.now() + index), // Ensure proper ordering
+          })),
         });
 
         // Update conversation updatedAt
         await prisma.conversation.update({
           where: { id: conversationId },
-          data: { updatedAt: new Date() }
+          data: { updatedAt: new Date() },
         });
       }
     } catch (error) {
-      console.error('Error saving messages:', error);
+      console.error("Error saving messages:", error);
       throw error;
     }
   }
@@ -206,15 +214,15 @@ export class DatabaseService {
         where: { id: conversationId },
         include: {
           messages: {
-            orderBy: { createdAt: 'asc' }
+            orderBy: { createdAt: "asc" },
           },
-          user: true
-        }
+          user: true,
+        },
       });
 
       return conversation;
     } catch (error) {
-      console.error('Error getting conversation:', error);
+      console.error("Error getting conversation:", error);
       throw error;
     }
   }
@@ -222,26 +230,29 @@ export class DatabaseService {
   /**
    * Get a specific conversation for a user (with messages)
    */
-  static async getUserConversation(clerkUserId: string, conversationId: string) {
+  static async getUserConversation(
+    clerkUserId: string,
+    conversationId: string,
+  ) {
     try {
       const user = await this.getOrCreateUser(clerkUserId);
-      
+
       const conversation = await prisma.conversation.findFirst({
-        where: { 
+        where: {
           id: conversationId,
-          userId: user.id 
+          userId: user.id,
         },
         include: {
           messages: {
-            orderBy: { createdAt: 'asc' }
-          }
-        }
+            orderBy: { createdAt: "asc" },
+          },
+        },
       });
 
       return conversation;
     } catch (error) {
-      console.error('Error getting user conversation:', error);
+      console.error("Error getting user conversation:", error);
       throw error;
     }
   }
-} 
+}
