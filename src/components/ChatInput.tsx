@@ -1,6 +1,6 @@
 import React, { useState, useRef, useCallback, useEffect } from "react";
 import { observer } from "mobx-react-lite";
-import { Sparkles, ImageIcon } from "lucide-react";
+import { Sparkles, ImageIcon, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -373,14 +373,14 @@ export const ChatInput = observer(function ChatInput({
           </div>
         </div>
         <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2 flex-1 min-w-0">
             <Select
               value={chatViewModel.selectedPersona}
               onValueChange={(persona) =>
                 chatViewModel.setSelectedPersona(persona)
               }
             >
-              <SelectTrigger className="w-[140px] h-8 text-xs">
+              <SelectTrigger className="w-1/3 sm:w-[140px] h-8 text-xs">
                 <SelectValue placeholder="Select persona" />
               </SelectTrigger>
               <SelectContent>
@@ -392,11 +392,13 @@ export const ChatInput = observer(function ChatInput({
               </SelectContent>
             </Select>
 
-            <ModelSelector
-              selectedModelId={selectedModelId}
-              availableModels={availableModels}
-              onModelChange={handleModelChange}
-            />
+            <div className="w-1/3 sm:w-auto">
+              <ModelSelector
+                selectedModelId={selectedModelId}
+                availableModels={availableModels}
+                onModelChange={handleModelChange}
+              />
+            </div>
           </div>
 
           {chatViewModel.generating ? (
@@ -406,18 +408,20 @@ export const ChatInput = observer(function ChatInput({
               size="sm"
               className="h-8 px-2 md:px-3"
             >
-              Stop
+              <span className="hidden sm:inline">Stop</span>
+              <span className="sm:hidden">Stop</span>
             </Button>
           ) : (
             <Button
               type="submit"
-              className="h-8 px-2 md:px-4"
+              className="h-8 px-2 sm:px-4 flex-shrink-0"
               disabled={
                 chatViewModel.generating ||
                 (!input.trim() && uploadedImages.length === 0)
               }
             >
-              {getSubmitButton(os)}
+              <Send className="h-4 w-4 sm:hidden" />
+              <span className="hidden sm:inline">{getSubmitButton(os)}</span>
             </Button>
           )}
         </div>
