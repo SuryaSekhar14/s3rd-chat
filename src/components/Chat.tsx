@@ -26,6 +26,7 @@ export const Chat = observer(function Chat() {
   
   // Track previous chatId to detect changes
   const [prevChatId, setPrevChatId] = React.useState<string | null>(null);
+  const [currentImageUrl, setCurrentImageUrl] = React.useState<string | null>(null);
   
   const chatId = activeChat?.id;
   
@@ -52,7 +53,8 @@ export const Chat = observer(function Chat() {
     body: {
       model: chatViewModel.getModelFromLocalStorage(),
       persona: selectedPersona,
-      id: chatId // Pass chatId in body as our API expects it
+      id: chatId, // Pass chatId in body as our API expects it
+      data: currentImageUrl ? { imageUrl: currentImageUrl } : undefined
     },
     onFinish: async (message) => {
       // Make sure we have an active chat
@@ -120,11 +122,11 @@ export const Chat = observer(function Chat() {
     }
   }, [chatId, prevChatId, initialMessages, setMessages, append]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent, imageUrl?: string) => {
     e.preventDefault();
     
     // Avoid empty submissions
-    if (!input.trim() || status === "streaming" || status === "submitted") return;
+    if (!input.trim() && !imageUrl || status === "streaming" || status === "submitted") return;
     
     const currentInput = input.trim();
     
@@ -140,12 +142,22 @@ export const Chat = observer(function Chat() {
           // Update URL without causing navigation using history API
           window.history.replaceState(null, '', `/chat/${result.chatId}`);
           sidebarViewModel.setActiveChatId(result.chatId);
+
+          if (imageUrl) {
+            setCurrentImageUrl(imageUrl);
+          }
           
           // Now send the message immediately
           append({
-            content: currentInput,
+            content: currentInput || "What's on the image?",
             role: 'user'
           });
+
+          if (imageUrl) {
+            setTimeout(() => {
+              setCurrentImageUrl(null);
+            }, 100);
+          }
         } else {
           showToast.error("Failed to load new chat");
         }
@@ -159,9 +171,15 @@ export const Chat = observer(function Chat() {
     
     // Use append to send to the AI - this will display the message in the UI
     append({
-      content: currentInput,
+      content: currentInput || "What's on the image?",
       role: 'user'
     });
+
+    if (imageUrl) {
+      setTimeout(() => {
+        setCurrentImageUrl(null);
+      }, 100);
+    }
   };
 
   useHotkeys({
