@@ -8,17 +8,20 @@ import { MessageList } from "@/components/MessageList";
 import { ChatInput } from "@/components/ChatInput";
 import { Loading } from "@/components/Loading";
 import { Welcome } from "@/components/Welcome";
+import { useUser } from "@clerk/nextjs";
 
 import { useChatViewModel, useSidebarViewModel } from "@/hooks/useViewModel";
 import { useHotkeys } from "@/hooks/useHotkeys";
 import { useChat } from "@ai-sdk/react";
 import { ApiMessage } from "@/lib/types";
 import showToast from "@/lib/toast";
+import { ChatHeader } from "./ChatHeader";
 
 export const Chat = observer(function Chat() {
   const chatViewModel = useChatViewModel();
   const sidebarViewModel = useSidebarViewModel();
   const pathname = usePathname();
+  const { user } = useUser();
 
   const activeChat = chatViewModel.activeChat;
   const selectedPersona = chatViewModel.selectedPersona;
@@ -217,6 +220,7 @@ export const Chat = observer(function Chat() {
   if (!activeChat && pathname === "/") {
     return (
       <div className="flex flex-col h-full overflow-hidden">
+        <ChatHeader />
         <div className="flex-1 overflow-hidden p-1 md:p-2 flex items-center justify-center">
           <Welcome
             onCreateChat={() => {
@@ -229,6 +233,7 @@ export const Chat = observer(function Chat() {
               }
             }}
             isCreating={isGenerating}
+            name={user?.firstName ?? undefined}
           />
         </div>
 
@@ -250,6 +255,7 @@ export const Chat = observer(function Chat() {
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
+      <ChatHeader />
       <div className="flex-1 overflow-hidden p-1 md:p-2">
         <MessageList
           messages={displayMessages}

@@ -8,9 +8,10 @@ import Image from "next/image";
 interface WelcomeProps {
   readonly onCreateChat: () => void;
   readonly isCreating?: boolean;
+  readonly name?: string;
 }
 
-export function Welcome({ onCreateChat, isCreating = false }: WelcomeProps) {
+export function Welcome({ onCreateChat, isCreating = false, name }: WelcomeProps) {
   return (
     <div className="flex items-center justify-center h-full p-8">
       <div className="max-w-4xl w-full space-y-8">
@@ -26,7 +27,9 @@ export function Welcome({ onCreateChat, isCreating = false }: WelcomeProps) {
           </div>
 
           <div className="space-y-3">
-            <h1 className="text-3xl font-bold">Welcome to S3RD Chat</h1>
+            <h1 className="text-3xl font-bold">
+              Welcome to S3RD Chat{name ? `, ${name}` : ""}
+            </h1>
             <p className="text-muted-foreground text-lg">
               Your intelligent AI companion with web search capabilities
             </p>

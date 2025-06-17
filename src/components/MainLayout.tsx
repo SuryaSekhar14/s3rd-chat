@@ -9,10 +9,6 @@ import { PanelLeft } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { KeyboardShortcutsHelp } from "./KeyboardShortcutsHelp";
 
-import { SettingsIcon } from "lucide-react";
-import { ThemeToggle } from "@/components/ThemeToggle";
-import { useRouter } from "next/navigation";
-
 interface MainLayoutProps {
   readonly children: React.ReactNode;
 }
@@ -21,7 +17,6 @@ export function MainLayout({ children }: MainLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const { isMobile } = useScreenSize();
   const [shortcutsDialogOpen, setShortcutsDialogOpen] = useState(false);
-  const router = useRouter();
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
@@ -103,16 +98,6 @@ export function MainLayout({ children }: MainLayoutProps) {
       )}
       
       <div className="flex-1 overflow-hidden relative">
-        <div className="absolute top-4 right-4 z-30 flex items-center gap-2">
-          <button
-            className="bg-muted/80 hover:bg-muted border border-border shadow-lg rounded-full p-1.5 transition-colors duration-200 hover:scale-105"
-            onClick={() => router.push("/settings")}
-            aria-label="Open settings"
-          >
-            <SettingsIcon className="h-4 w-4 text-foreground" />
-          </button>
-          <ThemeToggle />
-        </div>
         {children}
       </div>
 
