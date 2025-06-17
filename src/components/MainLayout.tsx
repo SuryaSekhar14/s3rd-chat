@@ -101,17 +101,7 @@ export function MainLayout({ children }: MainLayoutProps) {
           </div>
         </div>
       )}
-      {!sidebarOpen && (
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={toggleSidebar}
-          className="absolute top-4 left-2 z-40 h-8 w-8 rounded-full border bg-background shadow-sm"
-          aria-label="Open sidebar"
-        >
-          <PanelLeft className="h-5 w-5" />
-        </Button>
-      )}
+      
       <div className="flex-1 overflow-hidden relative">
         <div className="absolute top-4 right-4 z-30 flex items-center gap-2">
           <button
@@ -125,6 +115,20 @@ export function MainLayout({ children }: MainLayoutProps) {
         </div>
         {children}
       </div>
+
+      {/* Sidebar toggle button - moved outside flex container for better z-index handling */}
+      {!sidebarOpen && (
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={toggleSidebar}
+          className="fixed top-4 left-2 z-50 h-8 w-8 rounded-full border bg-background shadow-sm hover:bg-accent"
+          aria-label="Open sidebar"
+        >
+          <PanelLeft className="h-5 w-5" />
+        </Button>
+      )}
+
       <Dialog open={shortcutsDialogOpen} onOpenChange={setShortcutsDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <KeyboardShortcutsHelp />
