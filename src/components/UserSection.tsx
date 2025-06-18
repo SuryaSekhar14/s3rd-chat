@@ -1,18 +1,5 @@
 import React from "react";
 import { UserButton } from "@clerk/nextjs";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { SettingsIcon } from "lucide-react";
-import { ThemeToggle } from "./ThemeToggle";
-
-interface UserSectionProps {
-  readonly onOpenSettings: () => void;
-}
 
 export function UserSection() {
   return (
@@ -34,9 +21,6 @@ export function UserSection() {
               },
             }}
           />
-          {/* <div className="text-sm">
-            {user?.fullName ?? "User"}
-          </div> */}
         </div>
       </div>
     </div>

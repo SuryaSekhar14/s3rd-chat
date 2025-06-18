@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Eye, Globe, FileText, Brain, Code, Diamond } from "lucide-react";
+import { Eye, Globe, FileText, Brain, Code } from "lucide-react";
 import {
   Select,
   SelectContent,

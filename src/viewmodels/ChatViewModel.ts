@@ -1,8 +1,7 @@
 import { makeAutoObservable, runInAction } from "mobx";
 
 import { ChatModel } from "@/models/ChatModel";
-import { ApiMessageModel } from "@/models/ApiMessageModel";
-import { ChatMessageJSON, ChatMessageModel } from "@/models/ChatMessageModel";
+import { ChatMessageJSON } from "@/models/ChatMessageModel";
 import { ApiMessage } from "@/lib/types";
 
 import showToast from "@/lib/toast";

@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { observer } from "mobx-react-lite";
-import { SettingsIcon, MessageSquare, AlertCircle, LogIn, X } from "lucide-react";
+import { SettingsIcon, MessageSquare, AlertCircle, LogIn } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useRouter } from "next/navigation";
 import { usePreviewMode } from "@/hooks/usePreviewMode";
