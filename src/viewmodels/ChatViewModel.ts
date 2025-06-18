@@ -549,6 +549,19 @@ export class ChatViewModel {
         ];
       }
       
+      if ((message as any).data?.pdfUrl && message.role === "user") {
+        const pdfUrl = (message as any).data.pdfUrl;
+        const pdfFilename = (message as any).data.pdfFilename;
+        attachments = [
+          ...attachments,
+          {
+            type: "pdf",
+            url: pdfUrl,
+            filename: pdfFilename || pdfUrl.split("/").pop()?.split("?")[0] || "document.pdf"
+          }
+        ];
+      }
+      
       return {
         id: index,
         content: this.ensureStringContent(message.content),

@@ -26,17 +26,26 @@ export const POST = AuthenticatedEdgeRequest(
         pdfDocs,
       } = requestBody;
 
-      // Extract image URL from message data if present
       let extractedImageUrl = null;
+      let extractedPDFData = null;
       if (messages && messages.length > 0) {
         const lastMessage = messages[messages.length - 1];
-        if (lastMessage && lastMessage.data && lastMessage.data.imageUrl) {
-          extractedImageUrl = lastMessage.data.imageUrl;
+        if (lastMessage && lastMessage.data) {
+          if (lastMessage.data.imageUrl) {
+            extractedImageUrl = lastMessage.data.imageUrl;
+          }
+          if (lastMessage.data.pdfUrl) {
+            extractedPDFData = {
+              url: lastMessage.data.pdfUrl,
+              filename: lastMessage.data.pdfFilename
+            };
+          }
         }
       }
 
       console.log(`[DEBUG FROM ROUTE] data:`, requestBody.data);
       console.log(`[DEBUG FROM ROUTE] extractedImageUrl:`, extractedImageUrl);
+      console.log(`[DEBUG FROM ROUTE] extractedPDFData:`, extractedPDFData);
 
       console.log(
         `Chat API called with model: ${model}, chat ID: ${id}, persona: ${persona}`,
@@ -152,6 +161,12 @@ When using web search, provide the search results in a clear, organized manner a
                 type: "image",
                 url: imageUrl,
                 filename: imageUrl.split("/").pop()?.split("?")[0] || "image"
+              }];
+            } else if (extractedPDFData) {
+              attachments = [{
+                type: "pdf",
+                url: extractedPDFData.url,
+                filename: extractedPDFData.filename || extractedPDFData.url.split("/").pop()?.split("?")[0] || "document.pdf"
               }];
             } else if (lastUserMessage.content && typeof lastUserMessage.content === "object" && Array.isArray(lastUserMessage.content)) {
               // Multimodal message with attachments

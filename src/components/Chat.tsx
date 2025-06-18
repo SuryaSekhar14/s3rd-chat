@@ -237,11 +237,13 @@ export const Chat = observer(function Chat({ isPreviewMode = false }: ChatProps)
               data: { imageUrl }, // Store image URL in message data
             });
           } else if (pdfData) {
+            console.log('[Chat] Sending PDF message in new chat with URL:', pdfData.url);
             setCurrentPDFData(pdfData);
             setTimeout(() => {
               append({
                 content: currentInput || "What would you like to know about this PDF?",
                 role: "user",
+                data: { pdfUrl: pdfData.url, pdfFilename: pdfData.filename },
               });
               setTimeout(() => setCurrentPDFData(null), 100);
             }, 50);
@@ -272,11 +274,13 @@ export const Chat = observer(function Chat({ isPreviewMode = false }: ChatProps)
         data: { imageUrl }, // Store image URL in message data
       });
     } else if (pdfData) {
+      console.log('[Chat] Sending PDF message with URL:', pdfData.url);
       setCurrentPDFData(pdfData);
       setTimeout(() => {
         append({
           content: currentInput || "What would you like to know about this PDF?",
           role: "user",
+          data: { pdfUrl: pdfData.url, pdfFilename: pdfData.filename },
         });
         setTimeout(() => setCurrentPDFData(null), 100);
       }, 50);
