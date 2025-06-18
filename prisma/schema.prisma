@@ -29,6 +29,7 @@ model User {
   
   // Relations
   conversations Conversation[]
+  documents     Document[]
   
   @@map("users")
 }
@@ -62,4 +63,22 @@ model Message {
   conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   
   @@map("messages")
+}
+
+model Document {
+  id          String   @id @default(cuid())
+  userId      String
+  filename    String
+  originalUrl String   // URL to the original PDF file in blob storage
+  textContent String   // Extracted text content from the PDF
+  pageCount   Int      // Number of pages in the PDF
+  fileSize    Int      // File size in bytes
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId, createdAt(sort: Desc)])
+  @@map("documents")
 }

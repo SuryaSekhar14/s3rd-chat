@@ -1,6 +1,6 @@
 import React, { useState, useRef, useCallback, useEffect } from "react";
 import { observer } from "mobx-react-lite";
-import { Sparkles, ImageIcon, Send } from "lucide-react";
+import { Sparkles, ImageIcon, FileText, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -19,16 +19,19 @@ import { useOperatingSystem } from "@/hooks/useOperatingSystem";
 import { useHotkeys } from "@/hooks/useHotkeys";
 import { ImageUpload } from "@/components/ImageUpload";
 import { ImagePill } from "@/components/ImagePill";
+import { PDFUpload } from "@/components/PDFUpload";
+import { PDFPill } from "@/components/PDFPill";
 import { useModel } from "@/hooks/useModel";
 import showToast from "@/lib/toast";
 import { ModelSelector } from "@/components/ModelSelector";
 
 interface ChatInputProps {
   input: string;
-  handleSubmit: (e: React.FormEvent, imageUrl?: string) => void;
+  handleSubmit: (e: React.FormEvent, imageUrl?: string, pdfData?: { url: string; filename: string }) => void;
   setInput: (value: string) => void;
   stop: () => void;
   status: "streaming" | "submitted" | "ready" | "error";
+  onPDFProcessed?: (pdfUrl: string, filename: string) => void;
 }
 
 export const ChatInput = observer(function ChatInput({
@@ -37,6 +40,7 @@ export const ChatInput = observer(function ChatInput({
   setInput,
   stop,
   status,
+  onPDFProcessed,
 }: ChatInputProps) {
   const chatViewModel = useChatViewModel();
   const os = useOperatingSystem();
@@ -44,12 +48,18 @@ export const ChatInput = observer(function ChatInput({
   const [uploadedImages, setUploadedImages] = useState<
     Array<{ url: string; filename: string }>
   >([]);
+  const [uploadedPDFs, setUploadedPDFs] = useState<
+    Array<{ url: string; filename: string }>
+  >([]);
   const [showImageUpload, setShowImageUpload] = useState(false);
+  const [showPDFUpload, setShowPDFUpload] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const particlesRef = useRef<any[]>([]);
   const previousStatusRef = useRef(status);
   const { selectedModelId, setSelectedModel, availableModels } = useModel();
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [pdfFilename, setPdfFilename] = useState<string | null>(null);
 
   // Auto-focus when AI stops responding
   useEffect(() => {
@@ -188,7 +198,7 @@ export const ChatInput = observer(function ChatInput({
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (
-      (!input.trim() && uploadedImages.length === 0) ||
+      (!input.trim() && uploadedImages.length === 0 && uploadedPDFs.length === 0) ||
       chatViewModel.generating
     )
       return;
@@ -201,13 +211,16 @@ export const ChatInput = observer(function ChatInput({
       0,
     );
     animate(maxX);
-    handleSubmit(
-      e,
-      uploadedImages.length > 0 ? uploadedImages[0].url : undefined,
-    );
+    
+    const imageUrl = uploadedImages.length > 0 ? uploadedImages[0].url : undefined;
+    const pdfData = uploadedPDFs.length > 0 ? uploadedPDFs[0] : undefined;
+    
+    handleSubmit(e, imageUrl, pdfData);
 
     setUploadedImages([]);
+    setUploadedPDFs([]);
     setShowImageUpload(false);
+    setShowPDFUpload(false);
   };
 
   const handleImageUploaded = (imageUrl: string) => {
@@ -218,6 +231,22 @@ export const ChatInput = observer(function ChatInput({
 
   const handleRemoveImage = (indexToRemove: number) => {
     setUploadedImages((prev) =>
+      prev.filter((_, index) => index !== indexToRemove),
+    );
+  };
+
+  const handlePDFUploaded = (pdfUrl: string, filename: string) => {
+    setUploadedPDFs((prev) => [...prev, { url: pdfUrl, filename }]);
+    setShowPDFUpload(false);
+    setPdfUrl(pdfUrl);
+    setPdfFilename(filename);
+    if (typeof onPDFProcessed === 'function') {
+      onPDFProcessed(pdfUrl, filename);
+    }
+  };
+
+  const handleRemovePDF = (indexToRemove: number) => {
+    setUploadedPDFs((prev) =>
       prev.filter((_, index) => index !== indexToRemove),
     );
   };
@@ -287,6 +316,16 @@ export const ChatInput = observer(function ChatInput({
     }
   };
 
+  const getPlaceholderText = () => {
+    if (uploadedImages.length > 0) {
+      return "Ask something about this image...";
+    }
+    if (uploadedPDFs.length > 0) {
+      return "Ask something about this PDF...";
+    }
+    return "Type something here, paste an image, or upload a PDF";
+  };
+
   return (
     <div className="border-t p-2 md:p-4">
       <form onSubmit={onSubmit} className="flex flex-col gap-2">
@@ -294,6 +333,14 @@ export const ChatInput = observer(function ChatInput({
           <div className="border rounded-lg p-3 bg-gray-50">
             <ImageUpload
               onImageUploaded={handleImageUploaded}
+              disabled={chatViewModel.generating}
+            />
+          </div>
+        )}
+        {showPDFUpload && (
+          <div className="border rounded-lg p-3 bg-gray-50">
+            <PDFUpload
+              onPDFUploaded={handlePDFUploaded}
               disabled={chatViewModel.generating}
             />
           </div>
@@ -311,6 +358,19 @@ export const ChatInput = observer(function ChatInput({
             ))}
           </div>
         )}
+        {uploadedPDFs.length > 0 && (
+          <div className="flex flex-wrap gap-2 p-2">
+            {uploadedPDFs.map((pdf, index) => (
+              <PDFPill
+                key={`${pdf.url}-${index}`}
+                pdfUrl={pdf.url}
+                fileName={pdf.filename}
+                onRemove={() => handleRemovePDF(index)}
+                disabled={chatViewModel.generating}
+              />
+            ))}
+          </div>
+        )}
         <div className="relative">
           <canvas
             ref={canvasRef}
@@ -320,11 +380,7 @@ export const ChatInput = observer(function ChatInput({
           />
           <Textarea
             ref={textareaRef}
-            placeholder={
-              uploadedImages.length > 0
-                ? "Ask something about this image..."
-                : "Type something here or paste an image"
-            }
+            placeholder={getPlaceholderText()}
             className={`min-h-10 max-h-[200px] w-full resize-none overflow-y-auto whitespace-pre-wrap break-words text-sm md:text-base pr-10 z-10 ${
               isAnimating ? "text-transparent" : ""
             }`}
@@ -344,11 +400,29 @@ export const ChatInput = observer(function ChatInput({
               variant="ghost"
               size="icon"
               className="h-6 w-6 opacity-60 hover:opacity-100 transition-opacity"
-              onClick={() => setShowImageUpload(!showImageUpload)}
+              onClick={() => {
+                setShowImageUpload(!showImageUpload);
+                setShowPDFUpload(false);
+              }}
               disabled={chatViewModel.generating}
               title="Upload image"
             >
               <ImageIcon className="h-4 w-4" />
+            </Button>
+
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6 opacity-60 hover:opacity-100 transition-opacity"
+              onClick={() => {
+                setShowPDFUpload(!showPDFUpload);
+                setShowImageUpload(false);
+              }}
+              disabled={chatViewModel.generating}
+              title="Upload PDF"
+            >
+              <FileText className="h-4 w-4" />
             </Button>
 
             <Button
@@ -417,7 +491,7 @@ export const ChatInput = observer(function ChatInput({
               className="h-8 px-2 sm:px-4 flex-shrink-0"
               disabled={
                 chatViewModel.generating ||
-                (!input.trim() && uploadedImages.length === 0)
+                (!input.trim() && uploadedImages.length === 0 && uploadedPDFs.length === 0)
               }
             >
               <Send className="h-4 w-4 sm:hidden" />

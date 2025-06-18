@@ -23,13 +23,13 @@ export const POST = AuthenticatedEdgeRequest(
         model = defaultModel,
         persona = "none",
         data,
+        pdfDocs,
       } = requestBody;
 
       console.log(
         `Chat API called with model: ${model}, chat ID: ${id}, persona: ${persona}`,
       );
 
-      // Validate inputs
       if (!messages || !Array.isArray(messages) || messages.length === 0) {
         return new Response(
           JSON.stringify({
@@ -54,7 +54,6 @@ export const POST = AuthenticatedEdgeRequest(
         );
       }
 
-      // Validate the model
       if (!isModelSupported(model)) {
         console.warn(
           `Unsupported model: ${model}, falling back to default: ${defaultModel}`,
@@ -111,17 +110,23 @@ When using web search, provide the search results in a clear, organized manner a
           ? systemPrompt + "\n\n" + webSearchInstructions
           : systemPrompt;
 
-      // Handle database operations in parallel without blocking streaming
+      let pdfContext = "";
+      if (pdfDocs && Array.isArray(pdfDocs) && pdfDocs.length > 0) {
+        pdfContext = pdfDocs.map((doc, i) => `Page ${i + 1}:\n${doc.pageContent}`).join("\n\n");
+      }
+      let finalSystemPromptWithContext = finalSystemPrompt;
+      if (pdfContext) {
+        finalSystemPromptWithContext = `${finalSystemPrompt}\n\nPDF Content:\n${pdfContext}`;
+      }
+
       const dbOperations = (async () => {
         try {
-          // Ensure conversation exists
           const conversation = await DatabaseService.getConversation(id);
           if (!conversation) {
             console.log(`[Chat API] Creating new conversation ${id}`);
             await DatabaseService.createConversation(userId, id);
           }
 
-          // Save the user's message if it's not already in the database
           const lastUserMessage = messages[messages.length - 1];
           if (lastUserMessage && lastUserMessage.role === "user") {
             await DatabaseService.addMessage(id, lastUserMessage.content, true);
@@ -132,7 +137,6 @@ When using web search, provide the search results in a clear, organized manner a
             `[Chat API] Error with database operations for chat ${id}:`,
             dbError,
           );
-          // Don't fail the request for database errors, just log them
         }
       })();
 
@@ -180,11 +184,10 @@ When using web search, provide the search results in a clear, organized manner a
         console.log(`[Chat API] No web search available for model: ${modelId}`);
       }
 
-      // Start streaming immediately while handling database operations in parallel
       const result = streamText({
         model: finalModel,
         messages: processedMessages,
-        system: finalSystemPrompt,
+        system: finalSystemPromptWithContext,
         tools,
         maxSteps: tools ? 3 : 1,
         onFinish: async ({ text, finishReason, usage, toolResults }) => {
@@ -196,7 +199,6 @@ When using web search, provide the search results in a clear, organized manner a
           );
 
           try {
-            // Save the AI's response
             await DatabaseService.addMessage(
               id,
               text,

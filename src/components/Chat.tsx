@@ -32,6 +32,10 @@ export const Chat = observer(function Chat() {
   const [currentImageUrl, setCurrentImageUrl] = React.useState<string | null>(
     null,
   );
+  const [currentPDFData, setCurrentPDFData] = React.useState<{ url: string; filename: string } | null>(
+    null,
+  );
+  const [pdfDocs, setPdfDocs] = React.useState<any[] | null>(null);
 
   const chatId = activeChat?.id;
 
@@ -51,8 +55,9 @@ export const Chat = observer(function Chat() {
       body: {
         model: chatViewModel.getModelFromLocalStorage(),
         persona: selectedPersona,
-        id: chatId, // Pass chatId in body as our API expects it
+        id: chatId,
         data: currentImageUrl ? { imageUrl: currentImageUrl } : undefined,
+        pdfDocs: pdfDocs ?? undefined,
       },
       onFinish: async (message) => {
         // Make sure we have an active chat
@@ -125,12 +130,12 @@ export const Chat = observer(function Chat() {
     }
   }, [chatId, prevChatId, initialMessages, setMessages, append]);
 
-  const handleSubmit = async (e: React.FormEvent, imageUrl?: string) => {
+  const handleSubmit = async (e: React.FormEvent, imageUrl?: string, pdfData?: { url: string; filename: string }) => {
     e.preventDefault();
 
     // Avoid empty submissions
     if (
-      (!input.trim() && !imageUrl) ||
+      (!input.trim() && !imageUrl && !pdfData) ||
       status === "streaming" ||
       status === "submitted"
     )
@@ -155,15 +160,25 @@ export const Chat = observer(function Chat() {
             setCurrentImageUrl(imageUrl);
           }
 
+          if (pdfData) {
+            setCurrentPDFData(pdfData);
+          }
+
           // Now send the message immediately
           append({
-            content: currentInput || "What's on the image?",
+            content: currentInput || (imageUrl ? "What's on the image?" : pdfData ? "What would you like to know about this PDF?" : ""),
             role: "user",
           });
 
           if (imageUrl) {
             setTimeout(() => {
               setCurrentImageUrl(null);
+            }, 100);
+          }
+
+          if (pdfData) {
+            setTimeout(() => {
+              setCurrentPDFData(null);
             }, 100);
           }
         } else {
@@ -179,7 +194,7 @@ export const Chat = observer(function Chat() {
 
     // Use append to send to the AI - this will display the message in the UI
     append({
-      content: currentInput || "What's on the image?",
+      content: currentInput || (imageUrl ? "What's on the image?" : pdfData ? "What would you like to know about this PDF?" : ""),
       role: "user",
     });
 
@@ -187,6 +202,28 @@ export const Chat = observer(function Chat() {
       setTimeout(() => {
         setCurrentImageUrl(null);
       }, 100);
+    }
+
+    if (pdfData) {
+      setCurrentPDFData(pdfData);
+      setTimeout(() => {
+        setCurrentPDFData(null);
+      }, 100);
+    }
+  };
+
+  const handlePDFProcessed = async (pdfUrl: string, filename: string) => {
+    // Call /api/process-pdf to extract docs
+    const res = await fetch("/api/process-pdf", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url: pdfUrl, filename, sessionId: chatId }),
+    });
+    if (res.ok) {
+      const { docs } = await res.json();
+      setPdfDocs(docs);
+    } else {
+      setPdfDocs(null);
     }
   };
 
@@ -243,6 +280,7 @@ export const Chat = observer(function Chat() {
           setInput={setInput}
           stop={stop}
           status={status}
+          onPDFProcessed={handlePDFProcessed}
         />
       </div>
     );
@@ -270,6 +308,7 @@ export const Chat = observer(function Chat() {
         setInput={setInput}
         stop={stop}
         status={status}
+        onPDFProcessed={handlePDFProcessed}
       />
     </div>
   );
