@@ -19,6 +19,80 @@ import { usePinnedChats } from "@/hooks/usePinnedChats";
 import { MagicWandIcon } from "@/components/icons/MagicWandIcon";
 import { DownloadIcon } from "@/components/icons/DownloadIcon";
 import { handleExportConversation } from "@/lib/exportUtils";
+import { Input } from "@/components/ui/input";
+import { MagnifyingGlassIcon } from "@radix-ui/react-icons";
+import * as Cmdk from "cmdk";
+
+function SidebarSearchCmdk({
+  open,
+  onOpenChange,
+  chats,
+  onSelectChat,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  chats: { id: string; title: string }[];
+  onSelectChat: (id: string) => void;
+}) {
+  const [search, setSearch] = React.useState("");
+  const filtered = React.useMemo(
+    () =>
+      search.trim() === ""
+        ? chats
+        : chats.filter((c) =>
+            c.title.toLowerCase().includes(search.toLowerCase())
+          ),
+    [search, chats]
+  );
+  React.useEffect(() => {
+    if (!open) setSearch("");
+  }, [open]);
+  if (!open) return null;
+  return (
+    <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 backdrop-blur-sm animate-fade-in">
+      <div className="mt-24 w-full max-w-lg rounded-2xl border border-white/20 bg-white/10 backdrop-blur-2xl shadow-2xl p-0.5 transition-all duration-300">
+        <Cmdk.Command
+          label="Search chats"
+          className="w-full rounded-2xl bg-transparent text-foreground"
+        >
+          <div className="relative flex items-center">
+            <MagnifyingGlassIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
+            <Cmdk.CommandInput
+              autoFocus
+              placeholder="Search or press Enter to start new chat..."
+              value={search}
+              onValueChange={setSearch}
+              className="w-full pl-12 pr-4 py-4 text-lg bg-transparent outline-none rounded-2xl font-medium placeholder:text-muted-foreground focus:ring-2 focus:ring-indigo-400 transition-all shadow-md"
+            />
+          </div>
+          <Cmdk.CommandList className="max-h-80 overflow-y-auto mt-2 rounded-xl bg-black/30 backdrop-blur-xl">
+            <Cmdk.CommandEmpty className="px-4 py-3 text-muted-foreground text-center">
+              No chats found.
+            </Cmdk.CommandEmpty>
+            <Cmdk.CommandGroup heading="Recent Chats" className="">
+              <div className="px-4 py-1 text-xs font-semibold text-indigo-300/80 tracking-wider uppercase">
+                Recent Chats
+              </div>
+              {filtered.map((chat) => (
+                <Cmdk.CommandItem
+                  key={chat.id}
+                  value={chat.title}
+                  onSelect={() => {
+                    onSelectChat(chat.id);
+                    onOpenChange(false);
+                  }}
+                  className="px-4 py-3 my-1 mx-2 rounded-xl cursor-pointer transition-all duration-150 font-medium text-base bg-white/0 hover:bg-indigo-500/20 focus:bg-indigo-500/30 focus:text-indigo-200 hover:text-indigo-100 outline-none border border-transparent hover:border-indigo-400/40 focus:border-indigo-400/60 shadow-sm hover:scale-[1.03] focus:scale-[1.04]"
+                >
+                  {chat.title}
+                </Cmdk.CommandItem>
+              ))}
+            </Cmdk.CommandGroup>
+          </Cmdk.CommandList>
+        </Cmdk.Command>
+      </div>
+    </div>
+  );
+}
 
 export const Sidebar = observer(function Sidebar({
   onCollapse,
@@ -62,6 +136,22 @@ export const Sidebar = observer(function Sidebar({
         React.createRef<ChatListItemHandle | null>();
     }
   });
+
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredPinnedChats = useMemo(() => {
+    if (!searchQuery.trim()) return pinnedChats;
+    return pinnedChats.filter((chat) =>
+      chat.title.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [pinnedChats, searchQuery]);
+
+  const filteredUnpinnedChats = useMemo(() => {
+    if (!searchQuery.trim()) return unpinnedChats;
+    return unpinnedChats.filter((chat) =>
+      chat.title.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [unpinnedChats, searchQuery]);
 
   const handleChatClick = async (id: string) => {
     if (isGenerating) {
@@ -138,6 +228,18 @@ export const Sidebar = observer(function Sidebar({
     );
   };
 
+  const [cmdkOpen, setCmdkOpen] = React.useState(false);
+  React.useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setCmdkOpen(true);
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, []);
+
   return (
     <div className="flex flex-col h-full bg-muted/40 border-r">
       <div className="flex flex-col items-center justify-center p-2 md:p-4">
@@ -168,6 +270,14 @@ export const Sidebar = observer(function Sidebar({
           <PlusIcon className="h-4 w-4" />
           <span>New Chat</span>
         </Button>
+        <Input
+          type="text"
+          placeholder="Search your threads..."
+          className="mt-3 w-full text-sm px-3 py-2 rounded-md bg-background border border-muted focus:outline-none focus:ring-2 focus:ring-indigo-400"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          aria-label="Search chats"
+        />
       </div>
 
       <Separator />
@@ -184,12 +294,12 @@ export const Sidebar = observer(function Sidebar({
           )}
 
           {/* Pinned Chats Section */}
-          {!isLoading && pinnedChats.length > 0 && (
+          {!isLoading && filteredPinnedChats.length > 0 && (
             <>
               <div className="px-2 py-1 text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 Pinned Chats
               </div>
-              {pinnedChats.map((pinnedChat) => {
+              {filteredPinnedChats.map((pinnedChat) => {
                 const chat = chats.find((c) => c.id === pinnedChat.id);
 
                 // If chat data isn't loaded yet, use the stored pinned chat data
@@ -242,12 +352,12 @@ export const Sidebar = observer(function Sidebar({
           )}
 
           {/* Regular Chats Section */}
-          {!isLoading && unpinnedChats.length > 0 && (
+          {!isLoading && filteredUnpinnedChats.length > 0 && (
             <>
               <div className="px-2 py-1 text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 Recent Chats
               </div>
-              {unpinnedChats.map((chat) => (
+              {filteredUnpinnedChats.map((chat) => (
                 <ChatContextMenu
                   key={chat.id}
                   chat={chat}
@@ -266,9 +376,9 @@ export const Sidebar = observer(function Sidebar({
             </>
           )}
 
-          {!isLoading && chats.length === 0 && (
+          {!isLoading && filteredPinnedChats.length === 0 && filteredUnpinnedChats.length === 0 && (
             <div className="p-4 text-center text-muted-foreground">
-              No chats yet. Start a new conversation!
+              No chats found.
             </div>
           )}
         </div>
@@ -276,6 +386,30 @@ export const Sidebar = observer(function Sidebar({
 
       <Separator />
       <UserSection />
+
+      {isCollapsed && (
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setCmdkOpen(true)}
+          className="m-2"
+          aria-label="Open search"
+        >
+          <MagnifyingGlassIcon className="h-5 w-5" />
+        </Button>
+      )}
+      {/* Cmdk search modal */}
+      <SidebarSearchCmdk
+        open={cmdkOpen}
+        onOpenChange={setCmdkOpen}
+        chats={[...pinnedChats, ...unpinnedChats].map((c) => ({
+          id: c.id,
+          title: c.title,
+        }))}
+        onSelectChat={async (id) => {
+          await handleChatClick(id);
+        }}
+      />
     </div>
   );
 });

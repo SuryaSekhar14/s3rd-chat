@@ -1,6 +1,9 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import { MagnifyingGlassIcon } from "@radix-ui/react-icons";
+import * as Cmdk from "cmdk";
+import { useSidebarViewModel, useChatViewModel } from "@/hooks/useViewModel";
 
 import { Sidebar } from "@/components/Sidebar";
 import { Button } from "@/components/ui/button";
@@ -13,11 +16,85 @@ interface MainLayoutProps {
   readonly children: React.ReactNode;
 }
 
+function SidebarSearchCmdk({
+  open,
+  onOpenChange,
+  chats,
+  onSelectChat,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  chats: { id: string; title: string }[];
+  onSelectChat: (id: string) => void;
+}) {
+  const [search, setSearch] = React.useState("");
+  const filtered = React.useMemo(
+    () =>
+      search.trim() === ""
+        ? chats
+        : chats.filter((c) =>
+            c.title.toLowerCase().includes(search.toLowerCase())
+          ),
+    [search, chats]
+  );
+  React.useEffect(() => {
+    if (!open) setSearch("");
+  }, [open]);
+  if (!open) return null;
+  return (
+    <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 backdrop-blur-sm animate-fade-in">
+      <div className="mt-24 w-full max-w-lg rounded-2xl border border-white/20 bg-white/10 backdrop-blur-2xl shadow-2xl p-0.5 transition-all duration-300">
+        <Cmdk.Command
+          label="Search chats"
+          className="w-full rounded-2xl bg-transparent text-foreground"
+        >
+          <div className="relative flex items-center">
+            <MagnifyingGlassIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
+            <Cmdk.CommandInput
+              autoFocus
+              placeholder="Search or press Enter to start new chat..."
+              value={search}
+              onValueChange={setSearch}
+              className="w-full pl-12 pr-4 py-4 text-lg bg-transparent outline-none rounded-2xl font-medium placeholder:text-muted-foreground focus:ring-2 focus:ring-indigo-400 transition-all shadow-md"
+            />
+          </div>
+          <Cmdk.CommandList className="max-h-80 overflow-y-auto mt-2 rounded-xl bg-black/30 backdrop-blur-xl">
+            <Cmdk.CommandEmpty className="px-4 py-3 text-muted-foreground text-center">
+              No chats found.
+            </Cmdk.CommandEmpty>
+            <Cmdk.CommandGroup className="">
+              <div className="px-4 py-1 text-xs font-semibold text-indigo-300/80 tracking-wider uppercase">
+                Recent Chats
+              </div>
+              {filtered.map((chat) => (
+                <Cmdk.CommandItem
+                  key={chat.id}
+                  value={chat.title}
+                  onSelect={() => {
+                    onSelectChat(chat.id);
+                    onOpenChange(false);
+                  }}
+                  className="px-4 py-3 my-1 mx-2 rounded-xl cursor-pointer transition-all duration-150 font-medium text-base bg-white/0 hover:bg-indigo-500/20 focus:bg-indigo-500/30 focus:text-indigo-200 hover:text-indigo-100 outline-none border border-transparent hover:border-indigo-400/40 focus:border-indigo-400/60 shadow-sm hover:scale-[1.03] focus:scale-[1.04]"
+                >
+                  {chat.title}
+                </Cmdk.CommandItem>
+              ))}
+            </Cmdk.CommandGroup>
+          </Cmdk.CommandList>
+        </Cmdk.Command>
+      </div>
+    </div>
+  );
+}
+
 export function MainLayout({ children }: MainLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const { isMobile } = useScreenSize();
   const [shortcutsDialogOpen, setShortcutsDialogOpen] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const sidebarViewModel = useSidebarViewModel();
+  const chatViewModel = useChatViewModel();
+  const [cmdkOpen, setCmdkOpen] = React.useState(false);
 
   useEffect(() => {
     if (isMobile) {
@@ -65,6 +142,17 @@ export function MainLayout({ children }: MainLayoutProps) {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setCmdkOpen(true);
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, []);
+
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
   };
@@ -101,18 +189,41 @@ export function MainLayout({ children }: MainLayoutProps) {
         {children}
       </div>
 
-      {/* Sidebar toggle button - moved outside flex container for better z-index handling */}
       {!sidebarOpen && (
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={toggleSidebar}
-          className="fixed top-4 left-2 z-50 h-8 w-8 rounded-full border bg-background shadow-sm hover:bg-accent"
-          aria-label="Open sidebar"
-        >
-          <PanelLeft className="h-5 w-5" />
-        </Button>
+        <div className="fixed top-4 left-2 z-50 flex items-center">
+          <div className="flex flex-row items-center gap-2 bg-black/70 rounded-xl px-3 py-2 shadow-lg border border-white/10 backdrop-blur-md">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleSidebar}
+              className="h-8 w-8 rounded-lg border-none hover:bg-accent"
+              aria-label="Open sidebar"
+            >
+              <PanelLeft className="h-5 w-5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setCmdkOpen(true)}
+              className="h-8 w-8 rounded-lg border-none hover:bg-accent"
+              aria-label="Open search"
+            >
+              <MagnifyingGlassIcon className="h-5 w-5" />
+            </Button>
+          </div>
+        </div>
       )}
+
+      <SidebarSearchCmdk
+        open={cmdkOpen}
+        onOpenChange={setCmdkOpen}
+        chats={sidebarViewModel.allChatSummaries.map((c) => ({ id: c.id, title: c.title }))}
+        onSelectChat={async (id) => {
+          await chatViewModel.loadSpecificChat(id);
+          sidebarViewModel.setActiveChatId(id);
+          window.history.replaceState(null, "", `/chat/${id}`);
+        }}
+      />
 
       <Dialog open={shortcutsDialogOpen} onOpenChange={setShortcutsDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
