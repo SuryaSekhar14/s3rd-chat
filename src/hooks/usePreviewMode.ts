@@ -19,7 +19,7 @@ interface PreviewConversation {
   updatedAt: string;
 }
 
-let globalLimitDialogState = {
+const globalLimitDialogState = {
   showDialog: false,
   listeners: new Set<() => void>(),
 };

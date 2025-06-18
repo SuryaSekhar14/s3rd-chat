@@ -103,7 +103,7 @@ export const ChatHeader = observer(() => {
                 Preview Limit Reached!
               </h3>
               <p className="text-muted-foreground max-w-sm">
-                You've used all 10 free preview messages. Sign in now to continue your conversation with unlimited access.
+                You&apos;ve used all 10 free preview messages. Sign in now to continue your conversation with unlimited access.
               </p>
             </div>
 
