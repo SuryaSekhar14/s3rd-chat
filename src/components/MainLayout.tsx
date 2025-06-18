@@ -37,12 +37,37 @@ function SidebarSearchCmdk({
           ),
     [search, chats]
   );
+  
   React.useEffect(() => {
     if (!open) setSearch("");
   }, [open]);
+
+  // Handle escape key
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && open) {
+        e.preventDefault();
+        onOpenChange(false);
+      }
+    };
+
+    if (open) {
+      document.addEventListener("keydown", handleKeyDown);
+      return () => document.removeEventListener("keydown", handleKeyDown);
+    }
+  }, [open, onOpenChange]);
+
   if (!open) return null;
+  
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 backdrop-blur-sm animate-fade-in">
+    <div 
+      className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 backdrop-blur-sm animate-fade-in"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          onOpenChange(false);
+        }
+      }}
+    >
       <div className="mt-24 w-full max-w-lg rounded-2xl border border-white/20 bg-white/10 backdrop-blur-2xl shadow-2xl p-0.5 transition-all duration-300">
         <Cmdk.Command
           label="Search chats"
@@ -57,6 +82,10 @@ function SidebarSearchCmdk({
               onValueChange={setSearch}
               className="w-full pl-12 pr-4 py-4 text-lg bg-transparent outline-none rounded-2xl font-medium placeholder:text-muted-foreground focus:ring-2 focus:ring-indigo-400 transition-all shadow-md"
             />
+            {/* Escape indicator */}
+            <div className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-muted-foreground/60 bg-black/20 px-2 py-1 rounded-md backdrop-blur-sm">
+              Esc
+            </div>
           </div>
           <Cmdk.CommandList className="max-h-80 overflow-y-auto mt-2 rounded-xl bg-black/30 backdrop-blur-xl">
             <Cmdk.CommandEmpty className="px-4 py-3 text-muted-foreground text-center">
