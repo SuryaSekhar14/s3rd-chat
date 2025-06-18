@@ -3,7 +3,7 @@ import React, { useMemo, ReactNode, useState } from "react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { CopyIcon } from "@/components/icons/CopyIcon";
 import { Button } from "@/components/ui/button";
-import { LucideCircleDollarSign } from "lucide-react";
+import { LucideCircleDollarSign, FileText } from "lucide-react";
 
 import showToast from "@/lib/toast";
 
@@ -190,9 +190,13 @@ export const Message = React.memo(function Message({
     );
   }, [safeContent, isUser]);
 
-  // Filter image attachments
   const imageAttachments = attachments?.filter(att => att.type === "image") || [];
-  console.log('Rendering Message, attachments:', attachments, 'imageAttachments:', imageAttachments);
+  const pdfAttachments = attachments?.filter(att => att.type === "pdf") || [];
+  console.log('Rendering Message, attachments:', attachments, 'imageAttachments:', imageAttachments, 'pdfAttachments:', pdfAttachments);
+
+  const handlePDFClick = (pdfUrl: string, filename?: string) => {
+    window.open(pdfUrl, '_blank', 'noopener,noreferrer');
+  };
 
   return (
     <div
@@ -212,24 +216,47 @@ export const Message = React.memo(function Message({
                 : "bg-background rounded-tl-none"
               }`}
           >
-            {/* Always render for debug */}
-            <div className="mb-2 space-y-2">
-              {imageAttachments.map((attachment, index) => (
-                <div key={index} className="relative">
-                  <img
-                    src={attachment.url}
-                    alt={attachment.filename || `Image ${index + 1}`}
-                    className="max-w-full max-h-64 rounded-lg border border-gray-200 dark:border-gray-700"
-                    loading="lazy"
-                  />
-                  {attachment.filename && (
-                    <div className="text-xs text-muted-foreground mt-1">
-                      {attachment.filename}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
+            {(imageAttachments.length > 0 || pdfAttachments.length > 0) && (
+              <div className="mb-2 space-y-2">
+                {imageAttachments.map((attachment, index) => (
+                  <div key={`image-${index}`} className="relative">
+                    <img
+                      src={attachment.url}
+                      alt={attachment.filename || `Image ${index + 1}`}
+                      className="max-w-full max-h-64 rounded-lg border border-gray-200 dark:border-gray-700"
+                      loading="lazy"
+                    />
+                    {attachment.filename && (
+                      <div className="text-xs text-muted-foreground mt-1">
+                        {attachment.filename}
+                      </div>
+                    )}
+                  </div>
+                ))}
+                {pdfAttachments.map((attachment, index) => (
+                  <div key={`pdf-${index}`} className="relative">
+                    <button
+                      onClick={() => handlePDFClick(attachment.url, attachment.filename)}
+                      className="flex items-center gap-3 p-3 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors cursor-pointer w-full max-w-sm"
+                      title="Click to open PDF in new tab"
+                    >
+                      <div className="flex-shrink-0 p-2 bg-red-100 dark:bg-red-900/40 rounded-lg">
+                        <FileText className="h-5 w-5 text-red-600 dark:text-red-400" />
+                      </div>
+                      <div className="flex-1 min-w-0 text-left">
+                        <div className="text-sm font-medium text-red-900 dark:text-red-100 truncate">
+                          {attachment.filename || 'PDF Document'}
+                        </div>
+                        <div className="text-xs text-red-600 dark:text-red-400">
+                          PDF
+                        </div>
+                      </div>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+            
             {isUser ? (
               <pre className="text-xs md:text-sm whitespace-pre-wrap break-words font-sans">
                 {safeContent}
