@@ -7,17 +7,12 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { PlusIcon } from "@/components/icons/PlusIcon";
 import { useChatViewModel, useSidebarViewModel } from "@/hooks/useViewModel";
-import { ChatListItem } from "@/components/ChatListItem";
 import { ChatContextMenu } from "@/components/ChatContextMenu";
 import { UserSection } from "@/components/UserSection";
 import showToast from "@/lib/toast";
-import { PanelLeft, Pin } from "lucide-react";
-import { EditIcon } from "@/components/icons/EditIcon";
-import { TrashIcon } from "@/components/icons/TrashIcon";
+import { PanelLeft } from "lucide-react";
 import type { ChatListItemHandle } from "@/components/ChatListItem";
 import { usePinnedChats } from "@/hooks/usePinnedChats";
-import { MagicWandIcon } from "@/components/icons/MagicWandIcon";
-import { DownloadIcon } from "@/components/icons/DownloadIcon";
 import { handleExportConversation } from "@/lib/exportUtils";
 import { Input } from "@/components/ui/input";
 
@@ -124,21 +119,10 @@ export const Sidebar = observer(function Sidebar({
       return;
     }
 
-    const result = await sidebarViewModel.createNewChat();
-    if (result.success && result.chatId) {
-      // Load the new chat directly without navigation
-      const success = await chatViewModel.loadSpecificChat(result.chatId);
-      if (success) {
-        // Update URL without causing navigation using history API
-        window.history.replaceState(null, "", `/chat/${result.chatId}`);
-        sidebarViewModel.setActiveChatId(result.chatId);
-        showToast.success("New chat created");
-      } else {
-        showToast.error("Failed to load new chat");
-      }
-    } else {
-      showToast.error("Failed to create chat");
-    }
+    chatViewModel.clearActiveChat();
+    sidebarViewModel.setActiveChatId(null);
+
+    window.history.replaceState(null, "", "/");
   };
 
   const handleGenerateTitle = async (chatId: string) => {
@@ -151,7 +135,7 @@ export const Sidebar = observer(function Sidebar({
       chatId,
       title,
       chatViewModel.loadSpecificChat,
-      () => chatViewModel.activeChat,
+      () => chatViewModel.activeChat
     );
   };
 
@@ -291,11 +275,13 @@ export const Sidebar = observer(function Sidebar({
             </>
           )}
 
-          {!isLoading && filteredPinnedChats.length === 0 && filteredUnpinnedChats.length === 0 && (
-            <div className="p-4 text-center text-muted-foreground">
-              No chats found.
-            </div>
-          )}
+          {!isLoading &&
+            filteredPinnedChats.length === 0 &&
+            filteredUnpinnedChats.length === 0 && (
+              <div className="p-4 text-center text-muted-foreground">
+                No chats found.
+              </div>
+            )}
         </div>
       </ScrollArea>
 
