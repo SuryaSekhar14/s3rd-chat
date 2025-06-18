@@ -229,6 +229,7 @@ export class ChatViewModel {
         aiModel?: string;
         promptTokens?: number;
         completionTokens?: number;
+        attachments?: any; // Could be string or array
       }>;
       console.log(
         "[ChatViewModel] Raw database messages:",
@@ -237,55 +238,45 @@ export class ChatViewModel {
           isUser: msg.isUser,
           contentType: typeof msg.content,
           isEmpty: !msg.content || !msg.content.trim(),
+          hasAttachments: !!msg.attachments,
+          attachmentsType: typeof msg.attachments,
         })),
       );
 
-      const chatMessages = dbMessages
-        .filter((msg) => {
-          const content = this.ensureStringContent(msg.content);
-          const isValid = content && content.trim().length > 0;
-          if (!isValid) {
-            console.log("[ChatViewModel] Filtering out empty message:", msg);
+      const chatMessages = dbMessages.map((msg) => {
+        let attachments: any[] = [];
+        if (msg.attachments) {
+          if (typeof msg.attachments === 'string') {
+            try {
+              attachments = JSON.parse(msg.attachments);
+            } catch {
+              attachments = [];
+            }
+          } else if (Array.isArray(msg.attachments)) {
+            attachments = msg.attachments;
+          } else if (typeof msg.attachments === 'object') {
+            attachments = [msg.attachments];
           }
-          return isValid;
-        })
-        .map((msg, index: number) =>
-          ChatMessageModel.fromJSON({
-            id: index,
-            content: this.ensureStringContent(msg.content),
-            isUser: msg.isUser,
-            aiModel: msg.aiModel,
-            promptTokens: msg.promptTokens,
-            completionTokens: msg.completionTokens,
-          }),
-        );
-
-      console.log(
-        "[ChatViewModel] Loading active chat with",
-        chatMessages.length,
-        "valid messages (filtered from",
-        dbMessages.length,
-        "total)",
-      );
-
-      // Create ChatModel from database data
-      const chatModel = new ChatModel(
-        dbConversation.id,
-        dbConversation.title,
-        chatMessages,
-        true, // Active
-        new Date(dbConversation.createdAt),
-        new Date(dbConversation.updatedAt),
-        dbConversation.persona ?? "none",
-      );
-
-      runInAction(() => {
-        this._activeChat = chatModel;
+        }
+        return {
+          content: msg.content,
+          isUser: msg.isUser,
+          aiModel: msg.aiModel,
+          promptTokens: msg.promptTokens,
+          completionTokens: msg.completionTokens,
+          attachments,
+        };
       });
 
-      console.log("[ChatViewModel] Active chat loaded successfully");
-    } catch (error) {
-      console.error("Error loading active chat from database:", error);
+      this._activeChat = {
+        id: chatId,
+        messages: chatMessages,
+        // ...other properties as before
+        ...dbConversation,
+      };
+      
+    } catch (err) {
+      console.error("[ChatViewModel] Error loading chat from DB:", err);
     }
   };
 
@@ -306,10 +297,12 @@ export class ChatViewModel {
   addMessageToActiveChat = async (
     content: string | object,
     isUser: boolean,
+    attachments?: Array<{ type: string; url: string; filename?: string }>,
   ) => {
     console.log(
       "[ChatViewModel] Adding message to active chat, isUser:",
       isUser,
+      "attachments:", attachments
     );
     if (!this._activeChat) {
       console.log("[ChatViewModel] No active chat available");
@@ -319,8 +312,8 @@ export class ChatViewModel {
     const chatId = this._activeChat.id;
     const safeContent = this.ensureStringContent(content);
 
-    // Add message to chat model
-    this._activeChat.addMessage(safeContent, isUser);
+    // Add message to chat model with attachments
+    this._activeChat.addMessage(safeContent, isUser, attachments);
 
     // Save to database
     if (this.databaseMethods.saveMessagesToDatabase) {
@@ -329,6 +322,7 @@ export class ChatViewModel {
           id: msg.id,
           content: msg.content,
           isUser: msg.isUser,
+          attachments: msg.attachments,
         }));
 
         const success = await this.databaseMethods.saveMessagesToDatabase(
@@ -533,18 +527,37 @@ export class ChatViewModel {
         content: this.ensureStringContent(msg.content),
         promptTokens: msg.promptTokens,
         completionTokens: msg.completionTokens,
+        attachments: msg.attachments ?? [],
       }));
     return messages;
   };
 
   formatAIMessages = (messages: ApiMessage[]) => {
-    return messages.map((message, index) => ({
-      id: index,
-      content: this.ensureStringContent(message.content),
-      isUser: message.role === "user",
-      promptTokens: (message as any).promptTokens,
-      completionTokens: (message as any).completionTokens,
-    }));
+    return messages.map((message, index) => {
+      let attachments = (message as any).attachments ?? [];
+      
+      // Convert image data to attachments if present
+      if ((message as any).data?.imageUrl && message.role === "user") {
+        const imageUrl = (message as any).data.imageUrl;
+        attachments = [
+          ...attachments,
+          {
+            type: "image",
+            url: imageUrl,
+            filename: imageUrl.split("/").pop()?.split("?")[0] || "image"
+          }
+        ];
+      }
+      
+      return {
+        id: index,
+        content: this.ensureStringContent(message.content),
+        isUser: message.role === "user",
+        promptTokens: (message as any).promptTokens,
+        completionTokens: (message as any).completionTokens,
+        attachments,
+      };
+    });
   };
 
   // saveMessagesToStorage = async (messages: ApiMessage[]) => {

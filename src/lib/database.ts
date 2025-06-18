@@ -131,6 +131,7 @@ export class DatabaseService {
     isUser: boolean,
     tokenData?: { promptTokens?: number; completionTokens?: number },
     aiModel?: string,
+    attachments?: Array<{ type: string; url: string; filename?: string }>,
   ) {
     try {
       const message = await prisma.message.create({
@@ -141,6 +142,7 @@ export class DatabaseService {
           aiModel: isUser ? null : aiModel, // Only set aiModel for AI messages
           promptTokens: tokenData?.promptTokens,
           completionTokens: tokenData?.completionTokens,
+          attachments: attachments || undefined,
         },
       });
 
@@ -189,6 +191,7 @@ export class DatabaseService {
             content: message.content,
             isUser: message.isUser,
             aiModel: message.isUser ? null : message.aiModel,
+            attachments: (message as any).attachments || undefined,
             createdAt: new Date(Date.now() + index), // Ensure proper ordering
           })),
         });

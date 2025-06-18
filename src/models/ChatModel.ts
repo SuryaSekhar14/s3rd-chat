@@ -49,11 +49,11 @@ export class ChatModel {
     makeAutoObservable(this);
   }
 
-  // Add a message with content
-  addMessage(content: string, isUser: boolean): ChatMessageModel {
+  // Add a message with content and optional attachments
+  addMessage(content: string, isUser: boolean, attachments?: Array<{ type: string; url: string; filename?: string }>): ChatMessageModel {
     const message = isUser
-      ? ChatMessageModel.createUserMessage(this.nextMessageId, content)
-      : ChatMessageModel.createAssistantMessage(this.nextMessageId, content);
+      ? ChatMessageModel.createUserMessage(this.nextMessageId, content, attachments)
+      : ChatMessageModel.createAssistantMessage(this.nextMessageId, content, undefined, undefined, undefined, attachments);
 
     this.messages.push(message);
     this.nextMessageId++;

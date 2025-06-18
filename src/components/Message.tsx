@@ -157,6 +157,7 @@ interface MessageProps {
   readonly isUser: boolean;
   readonly promptTokens?: number;
   readonly completionTokens?: number;
+  readonly attachments?: Array<{ type: string; url: string; filename?: string }>;
 }
 
 export const Message = React.memo(function Message({
@@ -164,6 +165,7 @@ export const Message = React.memo(function Message({
   isUser,
   promptTokens,
   completionTokens,
+  attachments,
 }: MessageProps) {
   const [isHovered, setIsHovered] = useState(false);
   // Ensure content is always a string
@@ -188,6 +190,10 @@ export const Message = React.memo(function Message({
     );
   }, [safeContent, isUser]);
 
+  // Filter image attachments
+  const imageAttachments = attachments?.filter(att => att.type === "image") || [];
+  console.log('Rendering Message, attachments:', attachments, 'imageAttachments:', imageAttachments);
+
   return (
     <div
       className={`flex ${isUser ? "justify-end" : "justify-start"} mb-2 md:mb-4`}
@@ -206,6 +212,24 @@ export const Message = React.memo(function Message({
                 : "bg-background rounded-tl-none"
               }`}
           >
+            {/* Always render for debug */}
+            <div className="mb-2 space-y-2">
+              {imageAttachments.map((attachment, index) => (
+                <div key={index} className="relative">
+                  <img
+                    src={attachment.url}
+                    alt={attachment.filename || `Image ${index + 1}`}
+                    className="max-w-full max-h-64 rounded-lg border border-gray-200 dark:border-gray-700"
+                    loading="lazy"
+                  />
+                  {attachment.filename && (
+                    <div className="text-xs text-muted-foreground mt-1">
+                      {attachment.filename}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
             {isUser ? (
               <pre className="text-xs md:text-sm whitespace-pre-wrap break-words font-sans">
                 {safeContent}

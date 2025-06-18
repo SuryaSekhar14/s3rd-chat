@@ -26,6 +26,18 @@ export const POST = AuthenticatedEdgeRequest(
         pdfDocs,
       } = requestBody;
 
+      // Extract image URL from message data if present
+      let extractedImageUrl = null;
+      if (messages && messages.length > 0) {
+        const lastMessage = messages[messages.length - 1];
+        if (lastMessage && lastMessage.data && lastMessage.data.imageUrl) {
+          extractedImageUrl = lastMessage.data.imageUrl;
+        }
+      }
+
+      console.log(`[DEBUG FROM ROUTE] data:`, requestBody.data);
+      console.log(`[DEBUG FROM ROUTE] extractedImageUrl:`, extractedImageUrl);
+
       console.log(
         `Chat API called with model: ${model}, chat ID: ${id}, persona: ${persona}`,
       );
@@ -129,8 +141,34 @@ When using web search, provide the search results in a clear, organized manner a
 
           const lastUserMessage = messages[messages.length - 1];
           if (lastUserMessage && lastUserMessage.role === "user") {
-            await DatabaseService.addMessage(id, lastUserMessage.content, true);
-            console.log(`[Chat API] Saved user message to conversation ${id}`);
+            // Extract attachments from the message or request data
+            let attachments: Array<{ type: string; url: string; filename?: string }> | undefined;
+            let messageContent = lastUserMessage.content;
+            
+            if (data?.imageUrl || extractedImageUrl) {
+              // Single image from request data or extracted from message
+              const imageUrl = data?.imageUrl || extractedImageUrl;
+              attachments = [{
+                type: "image",
+                url: imageUrl,
+                filename: imageUrl.split("/").pop()?.split("?")[0] || "image"
+              }];
+            } else if (lastUserMessage.content && typeof lastUserMessage.content === "object" && Array.isArray(lastUserMessage.content)) {
+              // Multimodal message with attachments
+              const textItems = lastUserMessage.content.filter((item: any) => item.type === "text");
+              messageContent = textItems.map((item: any) => item.text).join(" ");
+              
+              attachments = lastUserMessage.content
+                .filter((item: any) => item.type === "image")
+                .map((item: any) => ({
+                  type: "image",
+                  url: item.image.toString(),
+                  filename: item.image.toString().split("/").pop()?.split("?")[0] || "image"
+                }));
+            }
+
+            await DatabaseService.addMessage(id, messageContent, true, undefined, undefined, attachments);
+            console.log(`[Chat API] Saved user message to conversation ${id}${attachments ? ` with ${attachments.length} attachment(s)` : ""}`);
           }
         } catch (dbError) {
           console.error(
@@ -143,7 +181,8 @@ When using web search, provide the search results in a clear, organized manner a
       await dbOperations;
 
       let processedMessages = messages;
-      if (data?.imageUrl) {
+      if (data?.imageUrl || extractedImageUrl) {
+        const imageUrl = data?.imageUrl || extractedImageUrl;
         const lastMessageIndex = messages.length - 1;
         const lastMessage = messages[lastMessageIndex];
 
@@ -154,7 +193,7 @@ When using web search, provide the search results in a clear, organized manner a
               role: "user",
               content: [
                 { type: "text", text: lastMessage.content },
-                { type: "image", image: new URL(data.imageUrl) },
+                { type: "image", image: new URL(imageUrl) },
               ],
             },
           ];

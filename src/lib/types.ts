@@ -20,4 +20,5 @@ export interface ChatMessage {
 export interface ApiMessage {
   role: "system" | "user" | "assistant";
   content: string;
+  attachments?: Array<{ type: string; url: string; filename?: string }>;
 }

@@ -16,22 +16,25 @@ import { useChat } from "@ai-sdk/react";
 import { ApiMessage } from "@/lib/types";
 import showToast from "@/lib/toast";
 import { ChatHeader } from "./ChatHeader";
+import { usePreviewMode } from "@/hooks/usePreviewMode";
 
-export const Chat = observer(function Chat() {
+interface ChatProps {
+  isPreviewMode?: boolean;
+}
+
+export const Chat = observer(function Chat({ isPreviewMode = false }: ChatProps) {
   const chatViewModel = useChatViewModel();
   const sidebarViewModel = useSidebarViewModel();
   const pathname = usePathname();
   const { user } = useUser();
+  const previewMode = usePreviewMode();
 
-  const activeChat = chatViewModel.activeChat;
+  const activeChat = isPreviewMode ? previewMode.conversation : chatViewModel.activeChat;
   const selectedPersona = chatViewModel.selectedPersona;
   const isGenerating = chatViewModel.generating;
 
   // Track previous chatId to detect changes
   const [prevChatId, setPrevChatId] = React.useState<string | null>(null);
-  const [currentImageUrl, setCurrentImageUrl] = React.useState<string | null>(
-    null,
-  );
   const [currentPDFData, setCurrentPDFData] = React.useState<{ url: string; filename: string } | null>(
     null,
   );
@@ -41,14 +44,21 @@ export const Chat = observer(function Chat() {
 
   // Get initial messages from the view model when loading a chat
   const initialMessages = useMemo(() => {
+    if (isPreviewMode && activeChat) {
+      return activeChat.messages.map(msg => ({
+        id: msg.id.toString(),
+        role: msg.isUser ? "user" as const : "assistant" as const,
+        content: msg.content,
+      }));
+    }
     return activeChat ? chatViewModel.getAIMessagesFromActiveChat() : [];
-  }, [activeChat, chatViewModel]);
+  }, [activeChat, chatViewModel, isPreviewMode]);
 
   // Navigation logic for chat routes is now handled in the page component
 
   const { messages, append, status, setInput, input, stop, setMessages } =
     useChat({
-      api: "/api/chat",
+      api: isPreviewMode ? "/api/chat-preview" : "/api/chat",
       id: chatId ?? undefined,
       initialMessages,
       streamProtocol: "data",
@@ -56,62 +66,87 @@ export const Chat = observer(function Chat() {
         model: chatViewModel.getModelFromLocalStorage(),
         persona: selectedPersona,
         id: chatId,
-        data: currentImageUrl ? { imageUrl: currentImageUrl } : undefined,
         pdfDocs: pdfDocs ?? undefined,
+        messageCount: isPreviewMode ? previewMode.messageCount : undefined,
       },
       onFinish: async (message) => {
         // Make sure we have an active chat
         if (activeChat && message.role === "assistant") {
-          // On assistant message completion, save all messages to localStorage
-          // await chatViewModel.saveMessagesToStorage(messages as ApiMessage[]);
-
-          // Revalidate the sidebar to reflect the updated chat order
-          // (the database updatedAt timestamp was updated by the chat API)
-          sidebarViewModel.revalidateChatSummaries();
-
-          // If this is the first AI response in a new chat, generate a title
-          if (messages.length === 2 && activeChat.title === "New Chat") {
-            chatViewModel.startGeneratingTitle();
+          if (isPreviewMode) {
+            previewMode.addMessage(message.content, false);
+            
+            if (messages.length === 2 && activeChat.title === "New Chat") {
+              const title = message.content.slice(0, 50) + (message.content.length > 50 ? "..." : "");
+              previewMode.updateTitle(title);
+            }
+          } else {
+            sidebarViewModel.revalidateChatSummaries();
+            
+            if (messages.length === 2 && activeChat.title === "New Chat") {
+              chatViewModel.startGeneratingTitle();
+            }
           }
         }
       },
       onError: (error) => {
         console.error("[Chat] useChat error:", error);
 
-        // Use status code to determine error type - much simpler and more reliable
-        let errorMessage = "Failed to send message. Please try again.";
+        const errorString = error?.toString() || '';
+        const errorMessage = (error as any)?.message || '';
+        
+        if (isPreviewMode && (
+          errorString.includes('Preview limit reached') || 
+          errorMessage.includes('Preview limit reached') ||
+          errorString.includes('requiresAuth')
+        )) {
+          previewMode.showLimitReachedDialog();
+          return;
+        }
+
+        let toastMessage = "Failed to send message. Please try again.";
 
         // Check if error has status code information
         const statusCode = (error as any)?.statusCode || (error as any)?.status;
 
         switch (statusCode) {
           case 400:
-            errorMessage =
+            toastMessage =
               "Invalid request. Please check your message and try again.";
             break;
           case 401:
-            errorMessage =
+            toastMessage =
               "Authentication error. Please refresh the page and try again.";
             break;
+          case 403:
+            if (isPreviewMode) {
+              previewMode.showLimitReachedDialog();
+              return;
+            } else {
+              toastMessage = "Access denied. Please try again.";
+            }
+            break;
           case 408:
-            errorMessage = "Request timed out. Please try again.";
+            toastMessage = "Request timed out. Please try again.";
             break;
           case 429:
-            errorMessage =
-              "The AI service is currently experiencing high demand. Please wait a moment and try again.";
+            if (isPreviewMode) {
+              toastMessage = "Rate limit exceeded. Please sign in for unlimited access or try again later.";
+            } else {
+              toastMessage = "The AI service is currently experiencing high demand. Please wait a moment and try again.";
+            }
             break;
           case 503:
-            errorMessage =
+            toastMessage =
               "The AI service is temporarily unavailable. Please try again later.";
             break;
           case 500:
           default:
-            errorMessage =
+            toastMessage =
               "Something went wrong while processing your message. Please try again.";
             break;
         }
 
-        showToast.error(errorMessage);
+        showToast.error(toastMessage);
       },
     });
 
@@ -132,6 +167,8 @@ export const Chat = observer(function Chat() {
 
   const handleSubmit = async (e: React.FormEvent, imageUrl?: string, pdfData?: { url: string; filename: string }) => {
     e.preventDefault();
+    
+    console.log('[Chat] handleSubmit called with imageUrl:', imageUrl);
 
     // Avoid empty submissions
     if (
@@ -142,6 +179,42 @@ export const Chat = observer(function Chat() {
       return;
 
     const currentInput = input.trim();
+
+    if (isPreviewMode) {
+      if (!previewMode.canSendMessage()) {
+        previewMode.showLimitReachedDialog();
+        return;
+      }
+
+      if (!activeChat) {
+        previewMode.createConversation();
+      }
+
+      const success = previewMode.incrementMessageCount();
+      if (!success) {
+        previewMode.showLimitReachedDialog();
+        return;
+      }
+      
+      previewMode.addMessage(currentInput, true);
+
+      try {
+        append({
+          content: currentInput,
+          role: "user",
+        });
+      } catch (appendError) {
+        if (appendError && typeof appendError === 'object') {
+          const errorStr = appendError.toString();
+          if (errorStr.includes('Preview limit reached') || errorStr.includes('requiresAuth')) {
+            previewMode.showLimitReachedDialog();
+            return;
+          }
+        }
+        throw appendError;
+      }
+      return;
+    }
 
     // If we're on home page with no active chat, create a new chat first
     if (!activeChat && pathname === "/") {
@@ -157,29 +230,26 @@ export const Chat = observer(function Chat() {
           sidebarViewModel.setActiveChatId(result.chatId);
 
           if (imageUrl) {
-            setCurrentImageUrl(imageUrl);
-          }
-
-          if (pdfData) {
+            console.log('[Chat] Sending image message in new chat with URL:', imageUrl);
+            append({
+              content: currentInput || "What's on the image?",
+              role: "user",
+              data: { imageUrl }, // Store image URL in message data
+            });
+          } else if (pdfData) {
             setCurrentPDFData(pdfData);
-          }
-
-          // Now send the message immediately
-          append({
-            content: currentInput || (imageUrl ? "What's on the image?" : pdfData ? "What would you like to know about this PDF?" : ""),
-            role: "user",
-          });
-
-          if (imageUrl) {
             setTimeout(() => {
-              setCurrentImageUrl(null);
-            }, 100);
-          }
-
-          if (pdfData) {
-            setTimeout(() => {
-              setCurrentPDFData(null);
-            }, 100);
+              append({
+                content: currentInput || "What would you like to know about this PDF?",
+                role: "user",
+              });
+              setTimeout(() => setCurrentPDFData(null), 100);
+            }, 50);
+          } else {
+            append({
+              content: currentInput,
+              role: "user",
+            });
           }
         } else {
           showToast.error("Failed to load new chat");
@@ -192,23 +262,30 @@ export const Chat = observer(function Chat() {
       }
     }
 
-    // Use append to send to the AI - this will display the message in the UI
-    append({
-      content: currentInput || (imageUrl ? "What's on the image?" : pdfData ? "What would you like to know about this PDF?" : ""),
-      role: "user",
-    });
-
+    // For existing chats, handle image uploads with proper data
     if (imageUrl) {
-      setTimeout(() => {
-        setCurrentImageUrl(null);
-      }, 100);
-    }
-
-    if (pdfData) {
+      console.log('[Chat] Sending image message with URL:', imageUrl);
+      
+      append({
+        content: currentInput || "What's on the image?",
+        role: "user",
+        data: { imageUrl }, // Store image URL in message data
+      });
+    } else if (pdfData) {
       setCurrentPDFData(pdfData);
       setTimeout(() => {
-        setCurrentPDFData(null);
-      }, 100);
+        append({
+          content: currentInput || "What would you like to know about this PDF?",
+          role: "user",
+        });
+        setTimeout(() => setCurrentPDFData(null), 100);
+      }, 50);
+    } else {
+      // Regular text message
+      append({
+        content: currentInput,
+        role: "user",
+      });
     }
   };
 
@@ -281,6 +358,7 @@ export const Chat = observer(function Chat() {
           stop={stop}
           status={status}
           onPDFProcessed={handlePDFProcessed}
+          isPreviewMode={isPreviewMode}
         />
       </div>
     );
@@ -309,6 +387,7 @@ export const Chat = observer(function Chat() {
         stop={stop}
         status={status}
         onPDFProcessed={handlePDFProcessed}
+        isPreviewMode={isPreviewMode}
       />
     </div>
   );
