@@ -9,10 +9,6 @@ import { PanelLeft } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { KeyboardShortcutsHelp } from "./KeyboardShortcutsHelp";
 
-import { SettingsIcon } from "lucide-react";
-import { ThemeToggle } from "@/components/ThemeToggle";
-import { useRouter } from "next/navigation";
-
 interface MainLayoutProps {
   readonly children: React.ReactNode;
 }
@@ -21,10 +17,7 @@ export function MainLayout({ children }: MainLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const { isMobile } = useScreenSize();
   const [shortcutsDialogOpen, setShortcutsDialogOpen] = useState(false);
-  const router = useRouter();
   const timerRef = useRef<NodeJS.Timeout | null>(null);
-  
-
 
   useEffect(() => {
     if (isMobile) {
@@ -47,7 +40,7 @@ export function MainLayout({ children }: MainLayoutProps) {
         timerRef.current = null;
       }
     }
-    
+
     return () => {
       if (timerRef.current) {
         clearTimeout(timerRef.current);
@@ -57,27 +50,27 @@ export function MainLayout({ children }: MainLayoutProps) {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 'b') {
+      if ((e.ctrlKey || e.metaKey) && e.key === "b") {
         e.preventDefault();
-        setSidebarOpen(prev => !prev);
+        setSidebarOpen((prev) => !prev);
       }
-      
-      if ((e.ctrlKey || e.metaKey) && e.key === 'h') {
+
+      if ((e.ctrlKey || e.metaKey) && e.key === "h") {
         e.preventDefault();
         setShortcutsDialogOpen(true);
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
   };
 
-  const openSidebarClass = isMobile ? 'w-[85vw] max-w-[300px]' : 'w-64';
-  const closedSidebarClass = isMobile ? '-translate-x-full' : 'w-10';
+  const openSidebarClass = isMobile ? "w-[85vw] max-w-[300px]" : "w-64";
+  const closedSidebarClass = isMobile ? "-translate-x-full" : "w-10";
 
   return (
     <div className="flex h-screen relative">
@@ -92,7 +85,7 @@ export function MainLayout({ children }: MainLayoutProps) {
       {sidebarOpen && (
         <div
           className={`
-            ${isMobile ? 'fixed left-0 top-0 bottom-0 z-30' : 'relative'} 
+            ${isMobile ? "fixed left-0 top-0 bottom-0 z-30" : "relative"} 
             h-full border-r transition-all duration-300 ease-in-out 
             ${sidebarOpen ? openSidebarClass : closedSidebarClass}
             bg-background
@@ -103,30 +96,24 @@ export function MainLayout({ children }: MainLayoutProps) {
           </div>
         </div>
       )}
+      
+      <div className="flex-1 overflow-hidden relative">
+        {children}
+      </div>
+
+      {/* Sidebar toggle button - moved outside flex container for better z-index handling */}
       {!sidebarOpen && (
         <Button
           variant="ghost"
           size="icon"
           onClick={toggleSidebar}
-          className="absolute top-4 left-2 z-40 h-8 w-8 rounded-full border bg-background shadow-sm"
+          className="fixed top-4 left-2 z-50 h-8 w-8 rounded-full border bg-background shadow-sm hover:bg-accent"
           aria-label="Open sidebar"
         >
           <PanelLeft className="h-5 w-5" />
         </Button>
       )}
-      <div className="flex-1 overflow-hidden relative">
-        <div className="absolute top-4 right-6 z-30 flex items-center gap-2">
-          <button
-            className="bg-muted/80 hover:bg-muted border border-border shadow-lg rounded-full p-1.5 transition-colors duration-200 hover:scale-105"
-            onClick={() => router.push('/settings')}
-            aria-label="Open settings"
-          >
-            <SettingsIcon className="h-4 w-4 text-foreground" />
-          </button>
-          <ThemeToggle />
-        </div>
-        {children}
-      </div>
+
       <Dialog open={shortcutsDialogOpen} onOpenChange={setShortcutsDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <KeyboardShortcutsHelp />
@@ -134,4 +121,4 @@ export function MainLayout({ children }: MainLayoutProps) {
       </Dialog>
     </div>
   );
-} 
+}

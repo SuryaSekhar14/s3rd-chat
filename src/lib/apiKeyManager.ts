@@ -17,13 +17,13 @@ export interface StoragePreference {
   lastUpdated: Date | null;
 }
 
-const API_KEY_STORAGE_KEY = 'sys_api_keys';
-const API_KEY_STATUS_STORAGE_KEY = 'sys_api_key_status';
-const STORAGE_PREFERENCE_KEY = 'sys_storage_preference';
+const API_KEY_STORAGE_KEY = "sys_api_keys";
+const API_KEY_STATUS_STORAGE_KEY = "sys_api_key_status";
+const STORAGE_PREFERENCE_KEY = "sys_storage_preference";
 
 export class APIKeyManager {
   private static instance: APIKeyManager;
-  private encryptionKey = 's3rd_legend_or_wot';
+  private encryptionKey = "s3rd_legend_or_wot";
 
   private constructor() {}
 
@@ -35,35 +35,36 @@ export class APIKeyManager {
   }
 
   private encrypt(text: string): string {
-    if (typeof window === 'undefined') return text;
+    if (typeof window === "undefined") return text;
     return btoa(text + this.encryptionKey);
   }
 
   private decrypt(encryptedText: string): string {
-    if (typeof window === 'undefined') return encryptedText;
+    if (typeof window === "undefined") return encryptedText;
     try {
       const decoded = atob(encryptedText);
-      return decoded.replace(this.encryptionKey, '');
+      return decoded.replace(this.encryptionKey, "");
     } catch {
-      return '';
+      return "";
     }
   }
 
   getCurrentStoragePreference(): StoragePreference {
-    if (typeof window === 'undefined') return { useDatabase: false, lastUpdated: null };
-    
+    if (typeof window === "undefined")
+      return { useDatabase: false, lastUpdated: null };
+
     try {
       const stored = localStorage.getItem(STORAGE_PREFERENCE_KEY);
-      
+
       if (!stored) {
         return { useDatabase: false, lastUpdated: null };
       }
-      
+
       const pref = JSON.parse(stored);
-      
+
       return {
         useDatabase: pref.useDatabase || false,
-        lastUpdated: pref.lastUpdated ? new Date(pref.lastUpdated) : null
+        lastUpdated: pref.lastUpdated ? new Date(pref.lastUpdated) : null,
       };
     } catch (error) {
       return { useDatabase: false, lastUpdated: null };
@@ -71,43 +72,49 @@ export class APIKeyManager {
   }
 
   updateStoragePreference(useDatabase: boolean): void {
-    if (typeof window === 'undefined') return;
-    
+    if (typeof window === "undefined") return;
+
     const preference: StoragePreference = {
       useDatabase,
-      lastUpdated: new Date()
+      lastUpdated: new Date(),
     };
-    
+
     localStorage.setItem(STORAGE_PREFERENCE_KEY, JSON.stringify(preference));
   }
 
   async loadAPIKeys(): Promise<APIKeyConfig> {
     const pref = this.getCurrentStoragePreference();
-    
+
     if (pref.useDatabase) {
       try {
-        const res = await fetch('/api/user/api-keys');
+        const res = await fetch("/api/user/api-keys");
         if (!res.ok) {
           return this.getEnvFallbackKeys();
         }
         const data = await res.json();
         const keys = data.apiKeys || {};
-        
-        if (Object.keys(keys).length === 0 || Object.values(keys).every(key => !key)) {
+
+        if (
+          Object.keys(keys).length === 0 ||
+          Object.values(keys).every((key) => !key)
+        ) {
           return this.getEnvFallbackKeys();
         }
-        
+
         return keys;
       } catch (error) {
         return this.getEnvFallbackKeys();
       }
     } else {
       const localKeys = this.loadFromLocalStorage();
-      
-      if (Object.keys(localKeys).length === 0 || Object.values(localKeys).every(key => !key)) {
+
+      if (
+        Object.keys(localKeys).length === 0 ||
+        Object.values(localKeys).every((key) => !key)
+      ) {
         return this.getEnvFallbackKeys();
       }
-      
+
       return localKeys;
     }
   }
@@ -122,7 +129,7 @@ export class APIKeyManager {
   }
 
   private loadFromLocalStorage(): APIKeyConfig {
-    if (typeof window === 'undefined') return {};
+    if (typeof window === "undefined") return {};
 
     try {
       const stored = localStorage.getItem(API_KEY_STORAGE_KEY);
@@ -146,21 +153,23 @@ export class APIKeyManager {
 
   async saveAPIKeys(keys: APIKeyConfig): Promise<void> {
     const pref = this.getCurrentStoragePreference();
-    
+
     if (pref.useDatabase) {
       try {
-        const response = await fetch('/api/user/api-keys', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+        const response = await fetch("/api/user/api-keys", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ apiKeys: keys }),
         });
-        
+
         if (!response.ok) {
           const errorText = await response.text();
-          throw new Error(`Database save failed: ${response.status} ${errorText}`);
+          throw new Error(
+            `Database save failed: ${response.status} ${errorText}`,
+          );
         }
       } catch (error) {
-        console.error('Error saving API keys to database:', error);
+        console.error("Error saving API keys to database:", error);
         throw error;
       }
     } else {
@@ -169,10 +178,10 @@ export class APIKeyManager {
   }
 
   private saveToLocalStorage(keys: APIKeyConfig): void {
-    if (typeof window === 'undefined') return;
+    if (typeof window === "undefined") return;
 
     const encryptedKeys: Record<string, string> = {};
-    
+
     Object.entries(keys).forEach(([provider, key]) => {
       if (key && key.trim()) {
         encryptedKeys[provider] = this.encrypt(key.trim());
@@ -184,20 +193,20 @@ export class APIKeyManager {
 
   async clearAPIKeys(): Promise<void> {
     const pref = this.getCurrentStoragePreference();
-    
+
     if (pref.useDatabase) {
       try {
-        await fetch('/api/user/api-keys', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+        await fetch("/api/user/api-keys", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ apiKeys: {} }),
         });
       } catch (error) {
-        console.error('Error clearing API keys from database:', error);
+        console.error("Error clearing API keys from database:", error);
         throw error;
       }
     } else {
-      if (typeof window !== 'undefined') {
+      if (typeof window !== "undefined") {
         localStorage.removeItem(API_KEY_STORAGE_KEY);
         localStorage.removeItem(API_KEY_STATUS_STORAGE_KEY);
       }
@@ -211,26 +220,26 @@ export class APIKeyManager {
       this.updateStoragePreference(true);
       return true;
     } catch (error) {
-      console.error('Error migrating to database:', error);
+      console.error("Error migrating to database:", error);
       return false;
     }
   }
 
   async migrateToLocalStorage(): Promise<boolean> {
     try {
-      const res = await fetch('/api/user/api-keys');
+      const res = await fetch("/api/user/api-keys");
       if (!res.ok) {
         return false;
       }
-      
+
       const data = await res.json();
       const keys = data.apiKeys || {};
-      
+
       this.saveToLocalStorage(keys);
       this.updateStoragePreference(false);
       return true;
     } catch (error) {
-      console.error('Error migrating to localStorage:', error);
+      console.error("Error migrating to localStorage:", error);
       return false;
     }
   }
@@ -243,10 +252,12 @@ export class APIKeyManager {
   getAPIKeySync(provider: keyof APIKeyConfig): string | undefined {
     const pref = this.getCurrentStoragePreference();
     if (pref.useDatabase) {
-      console.warn('getAPIKeySync called with database storage - returning undefined');
+      console.warn(
+        "getAPIKeySync called with database storage - returning undefined",
+      );
       return undefined;
     }
-    
+
     const keys = this.loadFromLocalStorage();
     return keys[provider];
   }
@@ -260,29 +271,32 @@ export class APIKeyManager {
     if (!key || key.trim().length === 0) return false;
 
     const trimmedKey = key.trim();
-    
+
     switch (provider) {
-      case 'openai':
-        return trimmedKey.startsWith('sk-') && trimmedKey.length > 20;
-      case 'anthropic':
-        return trimmedKey.startsWith('sk-ant-') && trimmedKey.length > 20;
-      case 'google':
+      case "openai":
+        return trimmedKey.startsWith("sk-") && trimmedKey.length > 20;
+      case "anthropic":
+        return trimmedKey.startsWith("sk-ant-") && trimmedKey.length > 20;
+      case "google":
         return trimmedKey.length > 20;
-      case 'deepseek':
-        return trimmedKey.startsWith('sk-') && trimmedKey.length > 20;
+      case "deepseek":
+        return trimmedKey.startsWith("sk-") && trimmedKey.length > 20;
       default:
         return trimmedKey.length > 10;
     }
   }
 
-  async testAPIKey(provider: keyof APIKeyConfig, key: string): Promise<boolean> {
+  async testAPIKey(
+    provider: keyof APIKeyConfig,
+    key: string,
+  ): Promise<boolean> {
     if (!this.validateAPIKeyFormat(provider, key)) return false;
 
     try {
-      const response = await fetch('/api/test-api-key', {
-        method: 'POST',
+      const response = await fetch("/api/test-api-key", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ provider, key }),
       });
@@ -295,11 +309,13 @@ export class APIKeyManager {
   }
 
   saveAPIKeyStatus(provider: string, isValid: boolean): void {
-    if (typeof window === 'undefined') return;
+    if (typeof window === "undefined") return;
 
     try {
       const stored = localStorage.getItem(API_KEY_STATUS_STORAGE_KEY);
-      const statuses: Record<string, APIKeyStatus> = stored ? JSON.parse(stored) : {};
+      const statuses: Record<string, APIKeyStatus> = stored
+        ? JSON.parse(stored)
+        : {};
 
       statuses[provider] = {
         provider,
@@ -308,14 +324,17 @@ export class APIKeyManager {
         lastChecked: new Date(),
       };
 
-      localStorage.setItem(API_KEY_STATUS_STORAGE_KEY, JSON.stringify(statuses));
+      localStorage.setItem(
+        API_KEY_STATUS_STORAGE_KEY,
+        JSON.stringify(statuses),
+      );
     } catch (error) {
-      console.error('Error saving API key status:', error);
+      console.error("Error saving API key status:", error);
     }
   }
 
   getAPIKeyStatus(provider: string): APIKeyStatus | null {
-    if (typeof window === 'undefined') return null;
+    if (typeof window === "undefined") return null;
 
     try {
       const stored = localStorage.getItem(API_KEY_STATUS_STORAGE_KEY);
@@ -329,7 +348,7 @@ export class APIKeyManager {
   }
 
   getAllAPIKeyStatuses(): APIKeyStatus[] {
-    if (typeof window === 'undefined') return [];
+    if (typeof window === "undefined") return [];
 
     try {
       const stored = localStorage.getItem(API_KEY_STATUS_STORAGE_KEY);
@@ -343,4 +362,4 @@ export class APIKeyManager {
   }
 }
 
-export const apiKeyManager = APIKeyManager.getInstance(); 
+export const apiKeyManager = APIKeyManager.getInstance();

@@ -1,10 +1,19 @@
-import { useState, useEffect } from 'react';
-import { apiKeyManager, APIKeyConfig, APIKeyStatus, StoragePreference } from '@/lib/apiKeyManager';
+import { useState, useEffect } from "react";
+import {
+  apiKeyManager,
+  APIKeyConfig,
+  APIKeyStatus,
+  StoragePreference,
+} from "@/lib/apiKeyManager";
 
 export function useAPIKeys() {
   const [apiKeys, setApiKeys] = useState<APIKeyConfig>({});
-  const [keyStatuses, setKeyStatuses] = useState<Record<string, APIKeyStatus>>({});
-  const [storagePreference, setStoragePreference] = useState<StoragePreference>({ useDatabase: false, lastUpdated: null });
+  const [keyStatuses, setKeyStatuses] = useState<Record<string, APIKeyStatus>>(
+    {},
+  );
+  const [storagePreference, setStoragePreference] = useState<StoragePreference>(
+    { useDatabase: false, lastUpdated: null },
+  );
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -13,21 +22,21 @@ export function useAPIKeys() {
       try {
         const keys = await apiKeyManager.loadAPIKeys();
         setApiKeys(keys);
-        
+
         const statuses: Record<string, APIKeyStatus> = {};
-        const providers = ['OpenAI', 'Anthropic', 'Google', 'DeepSeek'];
-        providers.forEach(provider => {
+        const providers = ["OpenAI", "Anthropic", "Google", "DeepSeek"];
+        providers.forEach((provider) => {
           const status = apiKeyManager.getAPIKeyStatus(provider);
           if (status) {
             statuses[provider] = status;
           }
         });
         setKeyStatuses(statuses);
-        
+
         const pref = apiKeyManager.getCurrentStoragePreference();
         setStoragePreference(pref);
       } catch (error) {
-        console.error('Error loading API keys:', error);
+        console.error("Error loading API keys:", error);
       } finally {
         setIsLoading(false);
       }
@@ -36,23 +45,27 @@ export function useAPIKeys() {
     loadKeys();
 
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'sys_api_keys' || e.key === 'sys_api_key_status' || e.key === 'sys_storage_preference') {
+      if (
+        e.key === "sys_api_keys" ||
+        e.key === "sys_api_key_status" ||
+        e.key === "sys_storage_preference"
+      ) {
         loadKeys();
       }
     };
 
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
   }, []);
 
   const updateAPIKey = async (provider: keyof APIKeyConfig, key: string) => {
     const newKeys = { ...apiKeys, [provider]: key };
     setApiKeys(newKeys);
     await apiKeyManager.saveAPIKeys(newKeys);
-    
+
     const providerName = getProviderName(provider);
     if (providerName) {
-      setKeyStatuses(prev => {
+      setKeyStatuses((prev) => {
         const newStatuses = { ...prev };
         delete newStatuses[providerName];
         return newStatuses;
@@ -66,18 +79,18 @@ export function useAPIKeys() {
 
     try {
       const isValid = await apiKeyManager.testAPIKey(provider, key);
-      
+
       apiKeyManager.saveAPIKeyStatus(providerName, isValid);
-      setKeyStatuses(prev => ({
+      setKeyStatuses((prev) => ({
         ...prev,
         [providerName]: {
           provider: providerName,
           hasKey: true,
           isValid,
-          lastChecked: new Date()
-        }
+          lastChecked: new Date(),
+        },
       }));
-      
+
       return isValid;
     } catch (error) {
       console.error(`Error testing ${providerName} API key:`, error);
@@ -90,11 +103,11 @@ export function useAPIKeys() {
     delete newKeys[provider];
     setApiKeys(newKeys);
     await apiKeyManager.saveAPIKeys(newKeys);
-    
+
     // Clear status
     const providerName = getProviderName(provider);
     if (providerName) {
-      setKeyStatuses(prev => {
+      setKeyStatuses((prev) => {
         const newStatuses = { ...prev };
         delete newStatuses[providerName];
         return newStatuses;
@@ -136,10 +149,10 @@ export function useAPIKeys() {
   const hasValidAPIKey = (provider: keyof APIKeyConfig) => {
     const key = apiKeys[provider];
     if (!key || !key.trim()) return false;
-    
+
     const providerName = getProviderName(provider);
     const status = keyStatuses[providerName];
-    
+
     return status?.isValid ?? false;
   };
 
@@ -161,16 +174,21 @@ export function useAPIKeys() {
     migrateToDatabase,
     migrateToLocalStorage,
     hasValidAPIKey,
-    getAPIKeyStatus
+    getAPIKeyStatus,
   };
 }
 
 function getProviderName(provider: keyof APIKeyConfig): string {
   switch (provider) {
-    case 'openai': return 'OpenAI';
-    case 'anthropic': return 'Anthropic';
-    case 'google': return 'Google';
-    case 'deepseek': return 'DeepSeek';
-    default: return '';
+    case "openai":
+      return "OpenAI";
+    case "anthropic":
+      return "Anthropic";
+    case "google":
+      return "Google";
+    case "deepseek":
+      return "DeepSeek";
+    default:
+      return "";
   }
-} 
+}

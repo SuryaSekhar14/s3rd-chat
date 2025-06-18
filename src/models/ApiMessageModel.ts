@@ -1,4 +1,4 @@
-export type MessageRole = 'user' | 'assistant' | 'system';
+export type MessageRole = "user" | "assistant" | "system";
 
 export interface ApiMessageJSON {
   role: MessageRole;
@@ -19,39 +19,35 @@ export class ApiMessageModel {
 
   // Create a user message
   static createUserMessage(content: string, id?: string): ApiMessageModel {
-    return new ApiMessageModel('user', content, id);
+    return new ApiMessageModel("user", content, id);
   }
 
   // Create an assistant message
   static createAssistantMessage(content: string, id?: string): ApiMessageModel {
-    return new ApiMessageModel('assistant', content, id);
+    return new ApiMessageModel("assistant", content, id);
   }
 
   // Create a system message
   static createSystemMessage(content: string, id?: string): ApiMessageModel {
-    return new ApiMessageModel('system', content, id);
+    return new ApiMessageModel("system", content, id);
   }
 
   // Serialization support
   toJSON(): ApiMessageJSON {
     const result: ApiMessageJSON = {
       role: this.role,
-      content: this.content
+      content: this.content,
     };
-    
+
     if (this.id) {
       result.id = this.id;
     }
-    
+
     return result;
   }
 
   // Create from plain object (deserialization)
   static fromJSON(json: ApiMessageJSON): ApiMessageModel {
-    return new ApiMessageModel(
-      json.role,
-      json.content,
-      json.id
-    );
+    return new ApiMessageModel(json.role, json.content, json.id);
   }
-} 
+}

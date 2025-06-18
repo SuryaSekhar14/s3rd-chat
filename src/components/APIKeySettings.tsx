@@ -3,17 +3,23 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
-import { 
-  Eye, 
-  EyeOff, 
-  CheckCircle, 
-  XCircle, 
-  AlertCircle, 
-  Key, 
+import {
+  Eye,
+  EyeOff,
+  CheckCircle,
+  XCircle,
+  AlertCircle,
+  Key,
   Sparkles,
   Zap,
   Brain,
@@ -25,14 +31,14 @@ import {
   Database,
   HardDrive,
   Cloud,
-  RefreshCw
+  RefreshCw,
 } from "lucide-react";
 import { useAPIKeys } from "@/hooks/useAPIKeys";
 import showToast from "@/lib/toast";
 
 interface ProviderConfig {
   name: string;
-  key: 'openai' | 'anthropic' | 'google' | 'deepseek';
+  key: "openai" | "anthropic" | "google" | "deepseek";
   icon: React.ComponentType<{ className?: string }>;
   color: string;
   description: string;
@@ -48,25 +54,25 @@ const providers: ProviderConfig[] = [
     color: "from-emerald-500 to-teal-600",
     description: "GPT-4o, GPT-4o Mini, and other OpenAI models",
     placeholder: "sk-...",
-    docsUrl: "https://platform.openai.com/api-keys"
+    docsUrl: "https://platform.openai.com/api-keys",
   },
   {
     name: "Anthropic",
-    key: "anthropic", 
+    key: "anthropic",
     icon: Brain,
     color: "from-orange-500 to-red-600",
     description: "Claude 4 Sonnet, Claude 3.7 Sonnet, and other Claude models",
     placeholder: "sk-ant-...",
-    docsUrl: "https://console.anthropic.com/"
+    docsUrl: "https://console.anthropic.com/",
   },
   {
     name: "Google",
     key: "google",
     icon: Search,
-    color: "from-blue-500 to-indigo-600", 
+    color: "from-blue-500 to-indigo-600",
     description: "Gemini 2.5 Flash, Gemini 2.5 Pro, and other Google models",
     placeholder: "AIza...",
-    docsUrl: "https://makersuite.google.com/app/apikey"
+    docsUrl: "https://makersuite.google.com/app/apikey",
   },
   {
     name: "DeepSeek",
@@ -75,16 +81,17 @@ const providers: ProviderConfig[] = [
     color: "from-purple-500 to-pink-600",
     description: "DeepSeek Chat, DeepSeek Reasoner, and other DeepSeek models",
     placeholder: "sk-...",
-    docsUrl: "https://platform.deepseek.com/api_keys"
-  }
+    docsUrl: "https://platform.deepseek.com/api_keys",
+  },
 ];
 
 export function APIKeySettings() {
-  const [selectedProvider, setSelectedProvider] = useState<ProviderConfig | null>(null);
+  const [selectedProvider, setSelectedProvider] =
+    useState<ProviderConfig | null>(null);
   const [showKey, setShowKey] = useState(false);
   const [testingKey, setTestingKey] = useState(false);
   const [migrating, setMigrating] = useState(false);
-  
+
   const {
     apiKeys,
     keyStatuses,
@@ -95,7 +102,7 @@ export function APIKeySettings() {
     clearAllAPIKeys,
     updateStoragePreference,
     migrateToDatabase,
-    migrateToLocalStorage
+    migrateToLocalStorage,
   } = useAPIKeys();
 
   const handleKeyChange = (value: string) => {
@@ -109,7 +116,7 @@ export function APIKeySettings() {
 
   const handleTestAPIKey = async () => {
     if (!selectedProvider) return;
-    
+
     const key = apiKeys[selectedProvider.key];
     if (!key || !key.trim()) {
       showToast.error(`Please enter a ${selectedProvider.name} API key first`);
@@ -120,7 +127,7 @@ export function APIKeySettings() {
 
     try {
       const isValid = await testAPIKey(selectedProvider.key, key);
-      
+
       if (isValid) {
         showToast.success(`${selectedProvider.name} API key is valid!`);
       } else {
@@ -136,7 +143,7 @@ export function APIKeySettings() {
 
   const handleSaveAPIKey = async () => {
     if (!selectedProvider) return;
-    
+
     const key = apiKeys[selectedProvider.key];
     if (!key || !key.trim()) {
       showToast.error(`Please enter a ${selectedProvider.name} API key first`);
@@ -145,11 +152,15 @@ export function APIKeySettings() {
 
     try {
       await updateAPIKey(selectedProvider.key, key);
-      
+
       if (storagePreference.useDatabase) {
-        showToast.success(`${selectedProvider.name} API key saved to database!`);
+        showToast.success(
+          `${selectedProvider.name} API key saved to database!`,
+        );
       } else {
-        showToast.success(`${selectedProvider.name} API key saved to local storage!`);
+        showToast.success(
+          `${selectedProvider.name} API key saved to local storage!`,
+        );
       }
     } catch (error) {
       showToast.error(`Failed to save ${selectedProvider.name} API key`);
@@ -158,7 +169,11 @@ export function APIKeySettings() {
   };
 
   const handleClearAllKeys = () => {
-    if (confirm("Are you sure you want to clear all API keys? This action cannot be undone.")) {
+    if (
+      confirm(
+        "Are you sure you want to clear all API keys? This action cannot be undone.",
+      )
+    ) {
       clearAllAPIKeys();
       showToast.success("All API keys cleared");
     }
@@ -192,11 +207,11 @@ export function APIKeySettings() {
 
   const getStatusIcon = (provider: ProviderConfig) => {
     const status = keyStatuses[provider.name];
-    
+
     if (!status) {
       return <AlertCircle className="h-4 w-4 text-muted-foreground" />;
     }
-    
+
     if (status.isValid) {
       return <CheckCircle className="h-4 w-4 text-green-500" />;
     } else {
@@ -206,8 +221,9 @@ export function APIKeySettings() {
 
   const getStatusText = (provider: ProviderConfig) => {
     const status = keyStatuses[provider.name];
-    const hasKey = apiKeys[provider.key] && apiKeys[provider.key]!.trim().length > 0;
-    
+    const hasKey =
+      apiKeys[provider.key] && apiKeys[provider.key]!.trim().length > 0;
+
     if (!hasKey) return "No key";
     if (!status) return "Not tested";
     if (status.isValid) return "Valid";
@@ -216,8 +232,9 @@ export function APIKeySettings() {
 
   const getStatusColor = (provider: ProviderConfig) => {
     const status = keyStatuses[provider.name];
-    const hasKey = apiKeys[provider.key] && apiKeys[provider.key]!.trim().length > 0;
-    
+    const hasKey =
+      apiKeys[provider.key] && apiKeys[provider.key]!.trim().length > 0;
+
     if (!hasKey) return "bg-gray-100 text-gray-600";
     if (!status) return "bg-yellow-100 text-yellow-700";
     if (status.isValid) return "bg-green-100 text-green-700";
@@ -269,18 +286,23 @@ export function APIKeySettings() {
                 </div>
                 <div>
                   <h4 className="font-medium">
-                    {storagePreference.useDatabase ? "Database Storage" : "Local Storage"}
+                    {storagePreference.useDatabase
+                      ? "Database Storage"
+                      : "Local Storage"}
                   </h4>
                   <p className="text-sm text-muted-foreground">
-                    {storagePreference.useDatabase 
-                      ? "Keys are encrypted and synced across devices" 
-                      : "Keys are stored locally in your browser"
-                    }
+                    {storagePreference.useDatabase
+                      ? "Keys are encrypted and synced across devices"
+                      : "Keys are stored locally in your browser"}
                   </p>
                   <div className="flex items-center gap-2 mt-1">
-                    <div className={`w-2 h-2 rounded-full ${storagePreference.useDatabase ? 'bg-blue-500' : 'bg-green-500'}`}></div>
+                    <div
+                      className={`w-2 h-2 rounded-full ${storagePreference.useDatabase ? "bg-blue-500" : "bg-green-500"}`}
+                    ></div>
                     <span className="text-xs text-muted-foreground">
-                      {storagePreference.useDatabase ? 'Active: Database' : 'Active: Local'}
+                      {storagePreference.useDatabase
+                        ? "Active: Database"
+                        : "Active: Local"}
                     </span>
                   </div>
                 </div>
@@ -295,17 +317,18 @@ export function APIKeySettings() {
                 <span className="text-sm text-muted-foreground">Database</span>
               </div>
             </div>
-            
+
             {migrating && (
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <RefreshCw className="h-4 w-4 animate-spin" />
                 Migrating API keys...
               </div>
             )}
-            
+
             {storagePreference.lastUpdated && (
               <p className="text-xs text-muted-foreground">
-                Last updated: {new Date(storagePreference.lastUpdated).toLocaleString()}
+                Last updated:{" "}
+                {new Date(storagePreference.lastUpdated).toLocaleString()}
               </p>
             )}
           </CardContent>
@@ -314,20 +337,25 @@ export function APIKeySettings() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {providers.map((provider, index) => {
             const Icon = provider.icon;
-            const hasKey = apiKeys[provider.key] && apiKeys[provider.key]!.trim().length > 0;
-            
+            const hasKey =
+              apiKeys[provider.key] && apiKeys[provider.key]!.trim().length > 0;
+
             return (
-              <Card 
+              <Card
                 key={provider.key}
                 className="relative overflow-hidden cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-[1.02]"
                 onClick={() => setSelectedProvider(provider)}
               >
-                <div className={`absolute inset-0 bg-gradient-to-r ${provider.color} opacity-5`} />
-                
+                <div
+                  className={`absolute inset-0 bg-gradient-to-r ${provider.color} opacity-5`}
+                />
+
                 <CardHeader className="relative">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                      <div className={`p-3 rounded-xl bg-gradient-to-r ${provider.color} text-white shadow-lg`}>
+                      <div
+                        className={`p-3 rounded-xl bg-gradient-to-r ${provider.color} text-white shadow-lg`}
+                      >
                         <Icon className="h-6 w-6" />
                       </div>
                       <div>
@@ -335,15 +363,19 @@ export function APIKeySettings() {
                           {provider.name}
                           {getStatusIcon(provider)}
                         </CardTitle>
-                        <CardDescription className="text-base">{provider.description}</CardDescription>
+                        <CardDescription className="text-base">
+                          {provider.description}
+                        </CardDescription>
                       </div>
                     </div>
-                    <Badge className={`${getStatusColor(provider)} text-sm font-medium`}>
+                    <Badge
+                      className={`${getStatusColor(provider)} text-sm font-medium`}
+                    >
                       {getStatusText(provider)}
                     </Badge>
                   </div>
                 </CardHeader>
-                
+
                 <CardContent className="relative">
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-muted-foreground">
@@ -351,10 +383,13 @@ export function APIKeySettings() {
                     </span>
                     <Plus className="h-5 w-5 text-muted-foreground" />
                   </div>
-                  
+
                   {keyStatuses[provider.name]?.lastChecked && (
                     <p className="text-xs text-muted-foreground mt-3">
-                      Last tested: {new Date(keyStatuses[provider.name].lastChecked!).toLocaleString()}
+                      Last tested:{" "}
+                      {new Date(
+                        keyStatuses[provider.name].lastChecked!,
+                      ).toLocaleString()}
                     </p>
                   )}
                 </CardContent>
@@ -385,18 +420,21 @@ export function APIKeySettings() {
                 <ul className="text-sm text-muted-foreground space-y-2">
                   <li className="flex items-center gap-2">
                     <Lock className="h-4 w-4 text-green-500" />
-                    Your API keys are encrypted and stored {storagePreference.useDatabase ? "securely in our database" : "locally in your browser"}
+                    Your API keys are encrypted and stored{" "}
+                    {storagePreference.useDatabase
+                      ? "securely in our database"
+                      : "locally in your browser"}
                   </li>
                   <li className="flex items-center gap-2">
                     <Shield className="h-4 w-4 text-blue-500" />
-                    {storagePreference.useDatabase 
-                      ? "Keys are synced across all your devices" 
-                      : "Keys are never sent to our servers except for validation"
-                    }
+                    {storagePreference.useDatabase
+                      ? "Keys are synced across all your devices"
+                      : "Keys are never sent to our servers except for validation"}
                   </li>
                   <li className="flex items-center gap-2">
                     <Key className="h-4 w-4 text-purple-500" />
-                    You can use your own keys to access premium models and avoid rate limits
+                    You can use your own keys to access premium models and avoid
+                    rate limits
                   </li>
                   <li className="flex items-center gap-2">
                     <AlertCircle className="h-4 w-4 text-orange-500" />
@@ -412,7 +450,9 @@ export function APIKeySettings() {
   }
 
   const Icon = selectedProvider.icon;
-  const hasKey = apiKeys[selectedProvider.key] && apiKeys[selectedProvider.key]!.trim().length > 0;
+  const hasKey =
+    apiKeys[selectedProvider.key] &&
+    apiKeys[selectedProvider.key]!.trim().length > 0;
 
   return (
     <div className="space-y-6">
@@ -426,33 +466,43 @@ export function APIKeySettings() {
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div className="flex items-center gap-4">
-          <div className={`p-3 rounded-xl bg-gradient-to-r ${selectedProvider.color} text-white shadow-lg`}>
+          <div
+            className={`p-3 rounded-xl bg-gradient-to-r ${selectedProvider.color} text-white shadow-lg`}
+          >
             <Icon className="h-6 w-6" />
           </div>
           <div>
             <h2 className="text-2xl font-bold">
               {selectedProvider.name} API Key
             </h2>
-            <p className="text-muted-foreground">{selectedProvider.description}</p>
+            <p className="text-muted-foreground">
+              {selectedProvider.description}
+            </p>
           </div>
         </div>
       </div>
 
       <Card className="relative overflow-hidden border-2 border-primary/10">
-        <div className={`absolute inset-0 bg-gradient-to-r ${selectedProvider.color} opacity-5`} />
-        
+        <div
+          className={`absolute inset-0 bg-gradient-to-r ${selectedProvider.color} opacity-5`}
+        />
+
         <CardHeader className="relative">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <span className="text-xl font-semibold">API Key Configuration</span>
+              <span className="text-xl font-semibold">
+                API Key Configuration
+              </span>
               {getStatusIcon(selectedProvider)}
             </div>
-            <Badge className={`${getStatusColor(selectedProvider)} text-sm font-medium`}>
+            <Badge
+              className={`${getStatusColor(selectedProvider)} text-sm font-medium`}
+            >
               {getStatusText(selectedProvider)}
             </Badge>
           </div>
         </CardHeader>
-        
+
         <CardContent className="relative space-y-6">
           <div className="space-y-3">
             <label className="text-sm font-medium">API Key</label>
@@ -499,9 +549,9 @@ export function APIKeySettings() {
                 )}
               </Button>
             </div>
-            
+
             <Button
-              onClick={() => window.open(selectedProvider.docsUrl, '_blank')}
+              onClick={() => window.open(selectedProvider.docsUrl, "_blank")}
               size="lg"
               variant="ghost"
               className="h-12"
@@ -512,7 +562,10 @@ export function APIKeySettings() {
 
           {keyStatuses[selectedProvider.name]?.lastChecked && (
             <p className="text-xs text-muted-foreground">
-              Last tested: {new Date(keyStatuses[selectedProvider.name].lastChecked!).toLocaleString()}
+              Last tested:{" "}
+              {new Date(
+                keyStatuses[selectedProvider.name].lastChecked!,
+              ).toLocaleString()}
             </p>
           )}
         </CardContent>
@@ -521,7 +574,7 @@ export function APIKeySettings() {
       <div className="flex items-center justify-between">
         <Button
           onClick={() => {
-            updateAPIKey(selectedProvider.key, '');
+            updateAPIKey(selectedProvider.key, "");
             showToast.success(`${selectedProvider.name} API key cleared`);
           }}
           variant="outline"
@@ -530,7 +583,7 @@ export function APIKeySettings() {
         >
           Clear Key
         </Button>
-        
+
         <Button
           onClick={handleSaveAPIKey}
           size="lg"
@@ -541,4 +594,4 @@ export function APIKeySettings() {
       </div>
     </div>
   );
-} 
+}

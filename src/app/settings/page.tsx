@@ -24,7 +24,7 @@ export default function SettingsPage() {
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => router.push('/')}
+              onClick={() => router.push("/")}
               className="h-10 w-10 rounded-full hover:bg-muted/80"
             >
               <ArrowLeft className="h-5 w-5" />
@@ -54,9 +54,14 @@ export default function SettingsPage() {
               <CardContent className="space-y-6">
                 <div className="flex justify-center">
                   <Avatar className="h-24 w-24">
-                    <AvatarImage src={user?.imageUrl} alt={user?.fullName || "User"} />
+                    <AvatarImage
+                      src={user?.imageUrl}
+                      alt={user?.fullName || "User"}
+                    />
                     <AvatarFallback className="text-2xl bg-primary/10">
-                      {user?.firstName?.charAt(0) || user?.emailAddresses[0]?.emailAddress?.charAt(0) || "U"}
+                      {user?.firstName?.charAt(0) ||
+                        user?.emailAddresses[0]?.emailAddress?.charAt(0) ||
+                        "U"}
                     </AvatarFallback>
                   </Avatar>
                 </div>
@@ -80,7 +85,8 @@ export default function SettingsPage() {
                   </div>
                   {user?.createdAt && (
                     <div className="text-xs text-muted-foreground">
-                      Member since {new Date(user.createdAt).toLocaleDateString()}
+                      Member since{" "}
+                      {new Date(user.createdAt).toLocaleDateString()}
                     </div>
                   )}
                 </div>
@@ -94,13 +100,23 @@ export default function SettingsPage() {
             </Card>
           </div>
           <div className="lg:col-span-2">
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <Tabs
+              value={activeTab}
+              onValueChange={setActiveTab}
+              className="w-full"
+            >
               <TabsList className="grid w-full max-w-md grid-cols-2">
-                <TabsTrigger value="api-keys" className="flex items-center gap-2">
+                <TabsTrigger
+                  value="api-keys"
+                  className="flex items-center gap-2"
+                >
                   <Key className="h-4 w-4" />
                   API Keys
                 </TabsTrigger>
-                <TabsTrigger value="appearance" className="flex items-center gap-2">
+                <TabsTrigger
+                  value="appearance"
+                  className="flex items-center gap-2"
+                >
                   <Palette className="h-4 w-4" />
                   Appearance
                 </TabsTrigger>
@@ -131,4 +147,4 @@ export default function SettingsPage() {
       </div>
     </div>
   );
-} 
+}

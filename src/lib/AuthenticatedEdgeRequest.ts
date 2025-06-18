@@ -1,11 +1,8 @@
-import { auth } from "@clerk/nextjs/server"
-import { NextRequest } from "next/server"
+import { auth } from "@clerk/nextjs/server";
+import { NextRequest } from "next/server";
 
 export function AuthenticatedEdgeRequest(
-  handler: (
-    req: NextRequest,
-    context: { userId: string }
-  ) => Promise<Response>
+  handler: (req: NextRequest, context: { userId: string }) => Promise<Response>,
 ) {
   return async function wrappedHandler(req: NextRequest): Promise<Response> {
     const { userId } = await auth();
@@ -14,9 +11,9 @@ export function AuthenticatedEdgeRequest(
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { "Content-Type": "application/json" },
-      })
+      });
     }
 
-    return handler(req, { userId })
-  }
+    return handler(req, { userId });
+  };
 }

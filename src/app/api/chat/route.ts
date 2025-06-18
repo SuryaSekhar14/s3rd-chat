@@ -26,7 +26,7 @@ export const POST = AuthenticatedEdgeRequest(
       } = requestBody;
 
       console.log(
-        `Chat API called with model: ${model}, chat ID: ${id}, persona: ${persona}`
+        `Chat API called with model: ${model}, chat ID: ${id}, persona: ${persona}`,
       );
 
       // Validate inputs
@@ -38,7 +38,7 @@ export const POST = AuthenticatedEdgeRequest(
           {
             status: 400,
             headers: { "Content-Type": "application/json" },
-          }
+          },
         );
       }
 
@@ -50,14 +50,14 @@ export const POST = AuthenticatedEdgeRequest(
           {
             status: 400,
             headers: { "Content-Type": "application/json" },
-          }
+          },
         );
       }
 
       // Validate the model
       if (!isModelSupported(model)) {
         console.warn(
-          `Unsupported model: ${model}, falling back to default: ${defaultModel}`
+          `Unsupported model: ${model}, falling back to default: ${defaultModel}`,
         );
       }
 
@@ -69,7 +69,7 @@ export const POST = AuthenticatedEdgeRequest(
       } catch (modelError) {
         console.error(
           `Error getting model provider for ${modelId}:`,
-          modelError
+          modelError,
         );
         return new Response(
           JSON.stringify({
@@ -78,7 +78,7 @@ export const POST = AuthenticatedEdgeRequest(
           {
             status: 503,
             headers: { "Content-Type": "application/json" },
-          }
+          },
         );
       }
 
@@ -91,7 +91,7 @@ export const POST = AuthenticatedEdgeRequest(
 
       const webSearchApproach = getWebSearchApproach(modelId);
       console.log(
-        `[Chat API] Using ${webSearchApproach} web search approach for model: ${modelId}`
+        `[Chat API] Using ${webSearchApproach} web search approach for model: ${modelId}`,
       );
 
       const webSearchInstructions = `
@@ -130,7 +130,7 @@ When using web search, provide the search results in a clear, organized manner a
         } catch (dbError) {
           console.error(
             `[Chat API] Error with database operations for chat ${id}:`,
-            dbError
+            dbError,
           );
           // Don't fail the request for database errors, just log them
         }
@@ -166,14 +166,14 @@ When using web search, provide the search results in a clear, organized manner a
             useSearchGrounding: true,
           });
           console.log(
-            `[Chat API] Enabled native web search for Gemini model: ${modelId}`
+            `[Chat API] Enabled native web search for Gemini model: ${modelId}`,
           );
         } else if (modelId.startsWith("gpt-4o")) {
           tools = {
             web_search_preview: openai.tools.webSearchPreview(),
           };
           console.log(
-            `[Chat API] Enabled native web search for OpenAI model: ${modelId}`
+            `[Chat API] Enabled native web search for OpenAI model: ${modelId}`,
           );
         }
       } else {
@@ -189,10 +189,10 @@ When using web search, provide the search results in a clear, organized manner a
         maxSteps: tools ? 3 : 1,
         onFinish: async ({ text, finishReason, usage, toolResults }) => {
           console.log(
-            `[Chat API] Conversation finished for chat ${id}. Reason: ${finishReason}`
+            `[Chat API] Conversation finished for chat ${id}. Reason: ${finishReason}`,
           );
           console.log(
-            `[Chat API] Used ${usage.promptTokens} prompt tokens and ${usage.completionTokens} completion tokens for chat ${id}`
+            `[Chat API] Used ${usage.promptTokens} prompt tokens and ${usage.completionTokens} completion tokens for chat ${id}`,
           );
 
           try {
@@ -205,15 +205,15 @@ When using web search, provide the search results in a clear, organized manner a
                 promptTokens: usage.promptTokens,
                 completionTokens: usage.completionTokens,
               },
-              modelId
+              modelId,
             );
             console.log(
-              `[Chat API] Saved AI response to conversation ${id} with token usage and model ${modelId}`
+              `[Chat API] Saved AI response to conversation ${id} with token usage and model ${modelId}`,
             );
           } catch (dbError) {
             console.error(
               `[Chat API] Error saving messages to database:`,
-              dbError
+              dbError,
             );
           }
         },
@@ -262,8 +262,8 @@ When using web search, provide the search results in a clear, organized manner a
         {
           status: statusCode,
           headers: { "Content-Type": "application/json" },
-        }
+        },
       );
     }
-  }
+  },
 );

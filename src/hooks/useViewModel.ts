@@ -1,4 +1,4 @@
-import { useViewModels } from '@/viewmodels/ViewModelProvider';
+import { useViewModels } from "@/viewmodels/ViewModelProvider";
 
 // Convenience hook for ChatViewModel
 export const useChatViewModel = () => {
@@ -10,4 +10,4 @@ export const useChatViewModel = () => {
 export const useSidebarViewModel = () => {
   const { sidebarViewModel } = useViewModels();
   return sidebarViewModel;
-}; 
+};

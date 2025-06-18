@@ -40,7 +40,7 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
             Configure your chat preferences and API keys
           </DialogDescription>
         </DialogHeader>
-        
+
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="api-keys" className="flex items-center gap-2">
@@ -52,15 +52,18 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
               Appearance
             </TabsTrigger>
           </TabsList>
-          
+
           <div className="mt-6 max-h-[60vh] overflow-y-auto">
             <TabsContent value="api-keys" className="space-y-4">
               <APIKeySettings />
             </TabsContent>
-            
+
             <TabsContent value="appearance" className="space-y-4">
               <div className="flex flex-col gap-2">
-                <label htmlFor="theme" className="text-sm font-medium leading-none">
+                <label
+                  htmlFor="theme"
+                  className="text-sm font-medium leading-none"
+                >
                   Theme
                 </label>
                 <div className="flex items-center gap-2">
@@ -76,4 +79,4 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
       </DialogContent>
     </Dialog>
   );
-}; 
+};

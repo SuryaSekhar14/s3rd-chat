@@ -16,9 +16,7 @@ export function Providers({
     <ClerkProvider afterSignOutUrl="/sign-in">
       <SWRConfig value={swrConfig}>
         <ThemeProvider attribute="class">
-          <ViewModelProvider>
-            {children}
-          </ViewModelProvider>
+          <ViewModelProvider>{children}</ViewModelProvider>
         </ThemeProvider>
       </SWRConfig>
     </ClerkProvider>

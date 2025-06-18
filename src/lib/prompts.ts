@@ -106,5 +106,5 @@ export const personaPrompts = {
       Suggest product strategies and prioritization frameworks.
       Provide guidance on product metrics, user research, and feature development.
       `,
-  }
+  },
 };

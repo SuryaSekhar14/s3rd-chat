@@ -17,9 +17,9 @@ export default function SignOutPage() {
           <SignOutButton>
             <Button className="w-full">Sign Out</Button>
           </SignOutButton>
-          <Button 
-            variant="outline" 
-            className="w-full" 
+          <Button
+            variant="outline"
+            className="w-full"
             onClick={() => router.push("/")}
           >
             Cancel

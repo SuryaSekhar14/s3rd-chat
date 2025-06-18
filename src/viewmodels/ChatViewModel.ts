@@ -1,17 +1,20 @@
-import { makeAutoObservable, runInAction } from 'mobx';
+import { makeAutoObservable, runInAction } from "mobx";
 
-import { ChatModel } from '@/models/ChatModel';
-import { ApiMessageModel } from '@/models/ApiMessageModel';
-import { ChatMessageJSON, ChatMessageModel } from '@/models/ChatMessageModel';
-import { ApiMessage } from '@/lib/types';
+import { ChatModel } from "@/models/ChatModel";
+import { ApiMessageModel } from "@/models/ApiMessageModel";
+import { ChatMessageJSON, ChatMessageModel } from "@/models/ChatMessageModel";
+import { ApiMessage } from "@/lib/types";
 
-import showToast from '@/lib/toast';
-import { defaultModel } from '@/lib/config';
+import showToast from "@/lib/toast";
+import { defaultModel } from "@/lib/config";
 
 // Database interface - only what ChatViewModel needs
 interface DatabaseMethods {
   getSpecificConversation?: (conversationId: string) => Promise<any | null>;
-  saveMessagesToDatabase?: (conversationId: string, messages: ChatMessageJSON[]) => Promise<boolean>;
+  saveMessagesToDatabase?: (
+    conversationId: string,
+    messages: ChatMessageJSON[],
+  ) => Promise<boolean>;
   isUserLoaded?: boolean;
   userId?: string;
 }
@@ -26,12 +29,11 @@ export class ChatViewModel {
   private activeChatId: string | null = null;
   private isInitialized: boolean = false;
   private isGenerating: boolean = false;
-  private selectedPersonaKey: string = 'none';
-
+  private selectedPersonaKey: string = "none";
 
   // Title editing state
   private isTitleEditing: boolean = false;
-  private editedTitle: string = '';
+  private editedTitle: string = "";
   private isGeneratingTitle: boolean = false;
 
   // Input state properties
@@ -49,14 +51,14 @@ export class ChatViewModel {
   // Inject database methods
   setDatabaseMethods = (methods: DatabaseMethods) => {
     this.databaseMethods = methods;
-  }
+  };
 
   setSidebarViewModel = (sidebarRef: SidebarViewModelRef) => {
     this.sidebarViewModel = sidebarRef;
-  }
+  };
 
   // ========== CHAT STATE GETTERS ==========
-  
+
   get activeChat(): ChatModel | null {
     return this._activeChat;
   }
@@ -71,7 +73,7 @@ export class ChatViewModel {
 
   get isNewChatDisabled(): boolean {
     // On home page, always allow new chat creation
-    if (typeof window !== 'undefined' && window.location.pathname === '/') {
+    if (typeof window !== "undefined" && window.location.pathname === "/") {
       return false;
     }
     return this.activeChat?.messages.length == 0;
@@ -98,12 +100,14 @@ export class ChatViewModel {
   }
 
   // ========== HELPER METHODS ==========
-  
-  private ensureStringContent(content: string | object | null | undefined): string {
+
+  private ensureStringContent(
+    content: string | object | null | undefined,
+  ): string {
     if (content === null || content === undefined) {
-      return '';
+      return "";
     }
-    if (typeof content === 'string') {
+    if (typeof content === "string") {
       return content;
     }
     try {
@@ -122,8 +126,8 @@ export class ChatViewModel {
 
   init = async () => {
     console.log("[ChatViewModel] Initializing...");
-    
-    if (typeof window === 'undefined') {
+
+    if (typeof window === "undefined") {
       // SSR - create initial empty state
       this.isInitialized = true;
       return;
@@ -131,62 +135,76 @@ export class ChatViewModel {
 
     this.isInitialized = true;
     console.log("[ChatViewModel] Initialization complete");
-  }
+  };
 
   // ========== CHAT OPERATIONS ==========
 
   // Wait for database methods to be ready
-  private waitForDatabaseMethods = async (timeoutMs: number = 5000): Promise<boolean> => {
+  private waitForDatabaseMethods = async (
+    timeoutMs: number = 5000,
+  ): Promise<boolean> => {
     const startTime = Date.now();
-    
+
     console.log("[ChatViewModel] Waiting for database methods...");
     console.log("[ChatViewModel] Current state:", {
-      hasGetSpecificConversation: !!this.databaseMethods.getSpecificConversation,
+      hasGetSpecificConversation:
+        !!this.databaseMethods.getSpecificConversation,
       isUserLoaded: this.databaseMethods.isUserLoaded,
-      userId: this.databaseMethods.userId
+      userId: this.databaseMethods.userId,
     });
-    
+
     while (Date.now() - startTime < timeoutMs) {
-      if (this.databaseMethods.getSpecificConversation && 
-          this.databaseMethods.isUserLoaded && 
-          this.databaseMethods.userId) {
+      if (
+        this.databaseMethods.getSpecificConversation &&
+        this.databaseMethods.isUserLoaded &&
+        this.databaseMethods.userId
+      ) {
         console.log("[ChatViewModel] Database methods ready!");
         return true;
       }
-      
-      await new Promise(resolve => setTimeout(resolve, 50));
+
+      await new Promise((resolve) => setTimeout(resolve, 50));
     }
-    
+
     console.log("[ChatViewModel] Timeout waiting for database methods");
     return false;
-  }
+  };
 
   // Method to directly load a specific chat by ID (for direct URL access)
   loadSpecificChat = async (chatId: string): Promise<boolean> => {
     console.log("[ChatViewModel] loadSpecificChat called for:", chatId);
-    
+
     // Wait for database methods to be ready
     const methodsReady = await this.waitForDatabaseMethods();
     if (!methodsReady) {
       console.log("[ChatViewModel] Database methods not ready after timeout");
       return false;
     }
-    
-    console.log("[ChatViewModel] Database methods ready, proceeding with chat load");
+
+    console.log(
+      "[ChatViewModel] Database methods ready, proceeding with chat load",
+    );
 
     try {
-      const conversation = await this.databaseMethods.getSpecificConversation!(chatId);
-      
+      const conversation =
+        await this.databaseMethods.getSpecificConversation!(chatId);
+
       if (!conversation) {
         console.log("[ChatViewModel] Chat not found:", chatId);
         return false;
       }
 
-      console.log("[ChatViewModel] Loading specific chat:", chatId, "with", conversation.messages?.length ?? 0, "messages");
-      
+      console.log(
+        "[ChatViewModel] Loading specific chat:",
+        chatId,
+        "with",
+        conversation.messages?.length ?? 0,
+        "messages",
+      );
+
       // Load the specific chat data
       this.loadActiveChatFromDatabase(chatId, conversation);
-      
+
       runInAction(() => {
         this.activeChatId = chatId;
       });
@@ -196,17 +214,34 @@ export class ChatViewModel {
       console.error("Error loading specific chat:", error);
       return false;
     }
-  }
+  };
 
   // Load active chat with messages from database data
-  private readonly loadActiveChatFromDatabase = (chatId: string, dbConversation: any): void => {
+  private readonly loadActiveChatFromDatabase = (
+    chatId: string,
+    dbConversation: any,
+  ): void => {
     try {
       // Convert messages from database format
-      const dbMessages = (dbConversation.messages ?? []) as Array<{ content: string; isUser: boolean; aiModel?: string; promptTokens?: number; completionTokens?: number }>;
-      console.log("[ChatViewModel] Raw database messages:", dbMessages.map(msg => ({ content: msg.content, isUser: msg.isUser, contentType: typeof msg.content, isEmpty: !msg.content || !msg.content.trim() })));
-      
+      const dbMessages = (dbConversation.messages ?? []) as Array<{
+        content: string;
+        isUser: boolean;
+        aiModel?: string;
+        promptTokens?: number;
+        completionTokens?: number;
+      }>;
+      console.log(
+        "[ChatViewModel] Raw database messages:",
+        dbMessages.map((msg) => ({
+          content: msg.content,
+          isUser: msg.isUser,
+          contentType: typeof msg.content,
+          isEmpty: !msg.content || !msg.content.trim(),
+        })),
+      );
+
       const chatMessages = dbMessages
-        .filter(msg => {
+        .filter((msg) => {
           const content = this.ensureStringContent(msg.content);
           const isValid = content && content.trim().length > 0;
           if (!isValid) {
@@ -214,18 +249,24 @@ export class ChatViewModel {
           }
           return isValid;
         })
-        .map((msg, index: number) => 
+        .map((msg, index: number) =>
           ChatMessageModel.fromJSON({
             id: index,
             content: this.ensureStringContent(msg.content),
             isUser: msg.isUser,
             aiModel: msg.aiModel,
             promptTokens: msg.promptTokens,
-            completionTokens: msg.completionTokens
-          })
+            completionTokens: msg.completionTokens,
+          }),
         );
 
-      console.log("[ChatViewModel] Loading active chat with", chatMessages.length, "valid messages (filtered from", dbMessages.length, "total)");
+      console.log(
+        "[ChatViewModel] Loading active chat with",
+        chatMessages.length,
+        "valid messages (filtered from",
+        dbMessages.length,
+        "total)",
+      );
 
       // Create ChatModel from database data
       const chatModel = new ChatModel(
@@ -235,7 +276,7 @@ export class ChatViewModel {
         true, // Active
         new Date(dbConversation.createdAt),
         new Date(dbConversation.updatedAt),
-        dbConversation.persona ?? 'none'
+        dbConversation.persona ?? "none",
       );
 
       runInAction(() => {
@@ -246,45 +287,54 @@ export class ChatViewModel {
     } catch (error) {
       console.error("Error loading active chat from database:", error);
     }
-  }
+  };
 
   setActiveChat = (chatModel: ChatModel) => {
     runInAction(() => {
       this._activeChat = chatModel;
       this.activeChatId = chatModel.id;
     });
-  }
+  };
 
   clearActiveChat = () => {
     runInAction(() => {
       this._activeChat = null;
       this.activeChatId = null;
     });
-  }
+  };
 
-  addMessageToActiveChat = async (content: string | object, isUser: boolean) => {
-    console.log("[ChatViewModel] Adding message to active chat, isUser:", isUser);
+  addMessageToActiveChat = async (
+    content: string | object,
+    isUser: boolean,
+  ) => {
+    console.log(
+      "[ChatViewModel] Adding message to active chat, isUser:",
+      isUser,
+    );
     if (!this._activeChat) {
       console.log("[ChatViewModel] No active chat available");
       return false;
     }
-    
+
     const chatId = this._activeChat.id;
     const safeContent = this.ensureStringContent(content);
-    
+
     // Add message to chat model
     this._activeChat.addMessage(safeContent, isUser);
 
     // Save to database
     if (this.databaseMethods.saveMessagesToDatabase) {
       try {
-        const messages = this._activeChat.messages.map(msg => ({
+        const messages = this._activeChat.messages.map((msg) => ({
           id: msg.id,
           content: msg.content,
-          isUser: msg.isUser
+          isUser: msg.isUser,
         }));
-        
-        const success = await this.databaseMethods.saveMessagesToDatabase(chatId, messages);
+
+        const success = await this.databaseMethods.saveMessagesToDatabase(
+          chatId,
+          messages,
+        );
         if (!success) {
           console.error("Failed to save messages to database");
           return false;
@@ -296,7 +346,7 @@ export class ChatViewModel {
     }
 
     return true;
-  }
+  };
 
   updateChatTitle = async (id: string, title: string): Promise<boolean> => {
     const trimmedTitle = title.trim();
@@ -307,19 +357,19 @@ export class ChatViewModel {
 
     try {
       // First update the database
-      const response = await fetch('/api/conversations', {
-        method: 'PATCH',
+      const response = await fetch("/api/conversations", {
+        method: "PATCH",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify({ 
-          conversationId: id, 
-          title: trimmedTitle 
+        body: JSON.stringify({
+          conversationId: id,
+          title: trimmedTitle,
         }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to update title in database');
+        throw new Error("Failed to update title in database");
       }
 
       // Then update the local state
@@ -342,59 +392,63 @@ export class ChatViewModel {
       showToast.error("Failed to update title");
       return false;
     }
-  }
+  };
 
   setIsGenerating = (isGenerating: boolean) => {
     this.isGenerating = isGenerating;
-  }
+  };
 
   setIsEnhancing = (isEnhancing: boolean) => {
     this.isEnhancing = isEnhancing;
-  }
+  };
 
   generateChatTitle = async (id: string) => {
     if (id !== this.activeChatId || !this._activeChat) return false;
-    
+
     if (this._activeChat.messages.length === 0) {
       showToast.error("Chat needs messages to generate a name");
       return false;
     }
-    
+
     try {
-      const apiMessages = this._activeChat.messages.map(msg => 
-        new ApiMessageModel(
-          msg.isUser ? 'user' : 'assistant',
-          msg.content
-        )
+      const apiMessages = this._activeChat.messages.map(
+        (msg) =>
+          new ApiMessageModel(msg.isUser ? "user" : "assistant", msg.content),
       );
 
-      const response = await fetch('/api/chat-name-suggestion', {
-        method: 'POST',
+      const response = await fetch("/api/chat-name-suggestion", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify({ chatId: this._activeChat?.id, messages: apiMessages }),
+        body: JSON.stringify({
+          chatId: this._activeChat?.id,
+          messages: apiMessages,
+        }),
       });
 
       const data = await response.json();
-      
+
       if (!response.ok) {
         // Handle API error responses using status code
         const statusCode = response.status;
         let errorMessage = "Failed to generate chat title";
-        
+
         switch (statusCode) {
           case 429:
-            errorMessage = "Rate limit reached. Please wait a moment before generating another chat name.";
+            errorMessage =
+              "Rate limit reached. Please wait a moment before generating another chat name.";
             break;
           case 408:
-            errorMessage = "Request timed out while generating chat name. Please try again.";
+            errorMessage =
+              "Request timed out while generating chat name. Please try again.";
             break;
           case 503:
-            errorMessage = "Service temporarily unavailable. Please try again later.";
+            errorMessage =
+              "Service temporarily unavailable. Please try again later.";
             break;
         }
-        
+
         showToast.error(errorMessage);
         return false;
       }
@@ -407,78 +461,81 @@ export class ChatViewModel {
       }
       return false;
     } catch (error) {
-      console.error('Error generating chat title:', error);
+      console.error("Error generating chat title:", error);
       showToast.error("Failed to generate chat title");
       return false;
     }
-  }
+  };
 
   // ========== TITLE EDITING ==========
 
   getTruncatedTitle = (title: string) => {
     return title.length > 40 ? title.substring(0, 40) + "..." : title;
-  }
+  };
 
   startTitleEdit = () => {
     this.isTitleEditing = true;
-    this.editedTitle = this._activeChat?.title || '';
-  }
+    this.editedTitle = this._activeChat?.title || "";
+  };
 
   cancelTitleEdit = () => {
     this.isTitleEditing = false;
-    this.editedTitle = '';
-  }
+    this.editedTitle = "";
+  };
 
   saveTitleEdit = async () => {
     if (!this._activeChat) return;
-    
-    const success = await this.updateChatTitle(this._activeChat.id, this.editedTitle);
+
+    const success = await this.updateChatTitle(
+      this._activeChat.id,
+      this.editedTitle,
+    );
     if (success) {
       this.isTitleEditing = false;
-      this.editedTitle = '';
+      this.editedTitle = "";
     }
-  }
+  };
 
   setEditedTitle = (title: string) => {
     this.editedTitle = title;
-  }
+  };
 
   startGeneratingTitle = async () => {
     if (!this._activeChat) return;
-    
+
     this.isGeneratingTitle = true;
     const success = await this.generateChatTitle(this._activeChat.id);
     this.isGeneratingTitle = false;
     return success;
-  }
+  };
 
   // ========== AI INTEGRATION ==========
 
   getModelFromLocalStorage = (): string => {
-    if (typeof window === 'undefined') {
+    if (typeof window === "undefined") {
       return defaultModel;
     }
     return localStorage.getItem("selectedModel") ?? defaultModel;
-  }
+  };
 
   getAIMessagesFromActiveChat = () => {
     if (!this._activeChat) {
       return [];
     }
     const messages = this._activeChat.messages
-      .filter(msg => {
+      .filter((msg) => {
         const content = this.ensureStringContent(msg.content);
         return content && content.trim().length > 0;
       })
-      .map(msg => ({
+      .map((msg) => ({
         id: `${this._activeChat!.id}-${msg.id}`,
-        role: msg.isUser ? 'user' as const : 'assistant' as const,
+        role: msg.isUser ? ("user" as const) : ("assistant" as const),
         content: this.ensureStringContent(msg.content),
         promptTokens: msg.promptTokens,
-        completionTokens: msg.completionTokens
+        completionTokens: msg.completionTokens,
       }));
     return messages;
-  }
+  };
 
   formatAIMessages = (messages: ApiMessage[]) => {
     return messages.map((message, index) => ({
@@ -486,37 +543,39 @@ export class ChatViewModel {
       content: this.ensureStringContent(message.content),
       isUser: message.role === "user",
       promptTokens: (message as any).promptTokens,
-      completionTokens: (message as any).completionTokens
+      completionTokens: (message as any).completionTokens,
     }));
-  }
+  };
 
   // saveMessagesToStorage = async (messages: ApiMessage[]) => {
   //   console.log("[ChatViewModel] Saving", messages.length, "messages to database");
-    
+
   //   if (!this._activeChat) {
   //     console.log("[ChatViewModel] No active chat, cannot save messages");
   //     return false;
   //   }
-    
+
   //   const formattedMessages = this.formatAIMessages(messages);
-    
+
   //   // Update the active chat's messages in memory
   //   runInAction(() => {
   //     if (this._activeChat) {
   //       this._activeChat.replaceAllMessages(formattedMessages);
   //     }
   //   });
-    
+
   //   // Save to database
   //   return await this.addMessageToActiveChat("", false); // This will save all messages
   // }
 
   enhancePrompt = async (input: string, setInput: (value: string) => void) => {
     if (!input.trim() || this.isGenerating || this.isEnhancing) return;
-    
+
     if (!this.isInitialized) {
-      console.log("[ChatViewModel] Waiting for initialization before enhancing prompt");
-      await new Promise<void>(resolve => {
+      console.log(
+        "[ChatViewModel] Waiting for initialization before enhancing prompt",
+      );
+      await new Promise<void>((resolve) => {
         const checkInit = () => {
           if (this.isInitialized) {
             resolve();
@@ -527,43 +586,46 @@ export class ChatViewModel {
         checkInit();
       });
     }
-    
+
     const currentChatId = this.activeChatId;
-    
+
     if (!currentChatId) {
       console.log("[ChatViewModel] Cannot enhance prompt: No active chat");
       return;
     }
-    
+
     try {
       this.setIsEnhancing(true);
-      const response = await fetch('/api/enhance-prompt', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          chatId: currentChatId, 
-          prompt: input 
-        })
+      const response = await fetch("/api/enhance-prompt", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chatId: currentChatId,
+          prompt: input,
+        }),
       });
 
       const data = await response.json();
-      
+
       if (!response.ok) {
         const statusCode = response.status;
         let errorMessage = "Failed to enhance prompt";
-        
+
         switch (statusCode) {
           case 429:
-            errorMessage = "Rate limit reached. Please wait a moment before enhancing again.";
+            errorMessage =
+              "Rate limit reached. Please wait a moment before enhancing again.";
             break;
           case 408:
-            errorMessage = "Request timed out while enhancing prompt. Please try again.";
+            errorMessage =
+              "Request timed out while enhancing prompt. Please try again.";
             break;
           case 503:
-            errorMessage = "Service temporarily unavailable. Please try again later.";
+            errorMessage =
+              "Service temporarily unavailable. Please try again later.";
             break;
         }
-        
+
         showToast.error(errorMessage);
         return;
       }
@@ -573,10 +635,10 @@ export class ChatViewModel {
         showToast.success("Prompt enhanced!");
       }
     } catch (error) {
-      console.error('Error enhancing prompt:', error);
+      console.error("Error enhancing prompt:", error);
       showToast.error("Failed to enhance prompt");
     } finally {
       this.setIsEnhancing(false);
     }
-  }
+  };
 }

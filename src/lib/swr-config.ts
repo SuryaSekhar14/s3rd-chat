@@ -1,4 +1,4 @@
-import { SWRConfiguration } from 'swr';
+import { SWRConfiguration } from "swr";
 
 // Optimized SWR configuration to reduce redundant API calls
 export const swrConfig: SWRConfiguration = {
@@ -6,11 +6,11 @@ export const swrConfig: SWRConfiguration = {
   fetcher: async (url: string) => {
     const response = await fetch(url);
     if (!response.ok) {
-      throw new Error('Failed to fetch');
+      throw new Error("Failed to fetch");
     }
     return response.json();
   },
-  
+
   // Optimized settings to reduce redundant calls
   revalidateOnFocus: false, // Don't refetch when window gets focus
   revalidateOnReconnect: true, // Refetch when reconnecting to internet
@@ -20,4 +20,4 @@ export const swrConfig: SWRConfiguration = {
   revalidateIfStale: false, // Don't automatically revalidate stale data
   revalidateOnMount: true, // Only revalidate on mount if data doesn't exist
   refreshInterval: 0, // Disable automatic refresh - use manual refresh or optimistic updates
-}; 
+};

@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import React, { useRef, useState, DragEvent } from 'react';
+import React, { useRef, useState, DragEvent } from "react";
 import { Button } from "@/components/ui/button";
-import { useImageUpload } from '@/hooks/useImageUpload';
-import { ImageIcon, X, Upload, Loader2 } from 'lucide-react';
+import { useImageUpload } from "@/hooks/useImageUpload";
+import { ImageIcon, X, Upload, Loader2 } from "lucide-react";
 
 interface ImageUploadProps {
   onImageUploaded: (imageUrl: string) => void;
@@ -14,7 +14,8 @@ export function ImageUpload({ onImageUploaded, disabled }: ImageUploadProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDragOver, setIsDragOver] = useState(false);
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
-  const { uploadImage, isUploading, uploadError, clearError } = useImageUpload();
+  const { uploadImage, isUploading, uploadError, clearError } =
+    useImageUpload();
 
   const handleFileSelect = async (file: File) => {
     if (disabled || isUploading) return;
@@ -26,7 +27,9 @@ export function ImageUpload({ onImageUploaded, disabled }: ImageUploadProps) {
     }
   };
 
-  const handleFileInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileInputChange = (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const file = event.target.files?.[0];
     if (file) {
       handleFileSelect(file);
@@ -50,7 +53,7 @@ export function ImageUpload({ onImageUploaded, disabled }: ImageUploadProps) {
     const files = event.dataTransfer.files;
     if (files.length > 0) {
       const file = files[0];
-      if (file.type.startsWith('image/')) {
+      if (file.type.startsWith("image/")) {
         handleFileSelect(file);
       }
     }
@@ -60,7 +63,7 @@ export function ImageUpload({ onImageUploaded, disabled }: ImageUploadProps) {
     setUploadedImage(null);
     clearError();
     if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+      fileInputRef.current.value = "";
     }
   };
 
@@ -103,8 +106,8 @@ export function ImageUpload({ onImageUploaded, disabled }: ImageUploadProps) {
         <div
           className={`
             border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors
-            ${isDragOver ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-gray-400'}
-            ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
+            ${isDragOver ? "border-blue-500 bg-blue-50" : "border-gray-300 hover:border-gray-400"}
+            ${disabled ? "opacity-50 cursor-not-allowed" : ""}
           `}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
@@ -140,4 +143,4 @@ export function ImageUpload({ onImageUploaded, disabled }: ImageUploadProps) {
       )}
     </div>
   );
-} 
+}

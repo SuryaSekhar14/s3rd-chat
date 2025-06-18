@@ -1,4 +1,4 @@
-import { makeAutoObservable } from 'mobx';
+import { makeAutoObservable } from "mobx";
 
 export interface ChatMessageJSON {
   id: number;
@@ -17,14 +17,21 @@ export class ChatMessageModel {
   promptTokens?: number;
   completionTokens?: number;
 
-  constructor(id: number, content: string, isUser: boolean, aiModel?: string, promptTokens?: number, completionTokens?: number) {
+  constructor(
+    id: number,
+    content: string,
+    isUser: boolean,
+    aiModel?: string,
+    promptTokens?: number,
+    completionTokens?: number,
+  ) {
     this.id = id;
     this.content = content;
     this.isUser = isUser;
     this.aiModel = aiModel;
     this.promptTokens = promptTokens;
     this.completionTokens = completionTokens;
-    
+
     // Make this object and its properties observable
     makeAutoObservable(this);
   }
@@ -35,15 +42,28 @@ export class ChatMessageModel {
   }
 
   // Create an assistant message
-  static createAssistantMessage(id: number, content: string, aiModel?: string, promptTokens?: number, completionTokens?: number): ChatMessageModel {
-    return new ChatMessageModel(id, content, false, aiModel, promptTokens, completionTokens);
+  static createAssistantMessage(
+    id: number,
+    content: string,
+    aiModel?: string,
+    promptTokens?: number,
+    completionTokens?: number,
+  ): ChatMessageModel {
+    return new ChatMessageModel(
+      id,
+      content,
+      false,
+      aiModel,
+      promptTokens,
+      completionTokens,
+    );
   }
 
   // Convert to API message format
-  toApiMessage(): { role: 'user' | 'assistant'; content: string } {
+  toApiMessage(): { role: "user" | "assistant"; content: string } {
     return {
-      role: this.isUser ? 'user' : 'assistant',
-      content: this.content
+      role: this.isUser ? "user" : "assistant",
+      content: this.content,
     };
   }
 
@@ -55,7 +75,7 @@ export class ChatMessageModel {
       isUser: this.isUser,
       aiModel: this.aiModel,
       promptTokens: this.promptTokens,
-      completionTokens: this.completionTokens
+      completionTokens: this.completionTokens,
     };
   }
 
@@ -67,7 +87,7 @@ export class ChatMessageModel {
       json.isUser,
       json.aiModel,
       json.promptTokens,
-      json.completionTokens
+      json.completionTokens,
     );
   }
-} 
+}

@@ -1,4 +1,4 @@
-import { makeAutoObservable, runInAction } from 'mobx';
+import { makeAutoObservable, runInAction } from "mobx";
 
 export interface ChatSummary {
   id: string;
@@ -12,8 +12,14 @@ export interface ChatSummary {
 
 interface SidebarDatabaseMethods {
   getChatsFromDatabase?: () => Promise<any[] | null>;
-  createConversationInDatabase?: (conversationId: string, title?: string) => Promise<boolean>;
-  updateConversationInDatabase?: (conversationId: string, updates: { title?: string }) => Promise<boolean>;
+  createConversationInDatabase?: (
+    conversationId: string,
+    title?: string,
+  ) => Promise<boolean>;
+  updateConversationInDatabase?: (
+    conversationId: string,
+    updates: { title?: string },
+  ) => Promise<boolean>;
   deleteConversationFromDatabase?: (conversationId: string) => Promise<boolean>;
   refreshConversations?: () => void;
   isUserLoaded?: boolean;
@@ -35,7 +41,7 @@ export class SidebarViewModel {
   // Inject database methods
   setDatabaseMethods = (methods: SidebarDatabaseMethods) => {
     this.databaseMethods = methods;
-  }
+  };
 
   get allChatSummaries(): ChatSummary[] {
     return [...this.chatSummaries];
@@ -53,16 +59,22 @@ export class SidebarViewModel {
     runInAction(() => {
       this.activeChatId = chatId;
       // Update active status in summaries
-      this.chatSummaries.forEach(summary => {
+      this.chatSummaries.forEach((summary) => {
         summary.active = summary.id === chatId;
       });
     });
-  }
+  };
 
   // Load conversations from database
   private readonly loadFromDatabase = async (): Promise<void> => {
-    if (!this.databaseMethods.getChatsFromDatabase || !this.databaseMethods.isUserLoaded || !this.databaseMethods.userId) {
-      console.log("[SidebarViewModel] Cannot load from database - user not loaded or methods not available");
+    if (
+      !this.databaseMethods.getChatsFromDatabase ||
+      !this.databaseMethods.isUserLoaded ||
+      !this.databaseMethods.userId
+    ) {
+      console.log(
+        "[SidebarViewModel] Cannot load from database - user not loaded or methods not available",
+      );
       return;
     }
 
@@ -72,8 +84,11 @@ export class SidebarViewModel {
 
     try {
       const dbConversations = await this.databaseMethods.getChatsFromDatabase();
-      console.log("[SidebarViewModel] Loaded conversations from database:", dbConversations?.length ?? 0);
-      
+      console.log(
+        "[SidebarViewModel] Loaded conversations from database:",
+        dbConversations?.length ?? 0,
+      );
+
       if (dbConversations && dbConversations.length > 0) {
         // Convert database conversations to chat summaries
         const summaries: ChatSummary[] = dbConversations.map((conv) => ({
@@ -83,15 +98,19 @@ export class SidebarViewModel {
           createdAt: conv.createdAt,
           updatedAt: conv.updatedAt,
           lastEditedAt: conv.updatedAt,
-          persona: 'none'
+          persona: "none",
         }));
-        
+
         runInAction(() => {
           this.chatSummaries = summaries;
           this.isLoading = false;
         });
-        
-        console.log("[SidebarViewModel] Loaded", summaries.length, "conversations from database");
+
+        console.log(
+          "[SidebarViewModel] Loaded",
+          summaries.length,
+          "conversations from database",
+        );
       } else {
         console.log("[SidebarViewModel] No conversations found in database");
         runInAction(() => {
@@ -106,12 +125,12 @@ export class SidebarViewModel {
         this.isLoading = false;
       });
     }
-  }
+  };
 
   init = async () => {
     console.log("[SidebarViewModel] Initializing...");
-    
-    if (typeof window === 'undefined') {
+
+    if (typeof window === "undefined") {
       this.isInitialized = true;
       return;
     }
@@ -119,15 +138,17 @@ export class SidebarViewModel {
     // Don't wait for user authentication here - let syncOnAuthentication handle it
     this.isInitialized = true;
     console.log("[SidebarViewModel] Initialization complete");
-  }
+  };
 
   // Trigger reload when user becomes authenticated
   syncOnAuthentication = async (): Promise<void> => {
     if (this.databaseMethods.isUserLoaded && this.databaseMethods.userId) {
-      console.log("[SidebarViewModel] User authenticated, loading from database");
+      console.log(
+        "[SidebarViewModel] User authenticated, loading from database",
+      );
       this.loadFromDatabase();
     }
-  }
+  };
 
   // Revalidate chat summaries using SWR
   revalidateChatSummaries = (): void => {
@@ -135,19 +156,19 @@ export class SidebarViewModel {
       console.log("[SidebarViewModel] Revalidating conversations using SWR");
       this.databaseMethods.refreshConversations();
     }
-  }
+  };
 
   createNewChat = async (): Promise<{ success: boolean; chatId?: string }> => {
     const newChatId = crypto.randomUUID();
-    
+
     try {
       // Create in database first
       if (this.databaseMethods.createConversationInDatabase) {
         const success = await this.databaseMethods.createConversationInDatabase(
           newChatId,
-          "New Chat"
+          "New Chat",
         );
-        
+
         if (!success) {
           return { success: false };
         }
@@ -156,10 +177,10 @@ export class SidebarViewModel {
       // Add to local summaries
       runInAction(() => {
         // Update active status in summaries
-        this.chatSummaries.forEach(summary => {
+        this.chatSummaries.forEach((summary) => {
           summary.active = false;
         });
-        
+
         const summary: ChatSummary = {
           id: newChatId,
           title: "New Chat",
@@ -167,9 +188,9 @@ export class SidebarViewModel {
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
           lastEditedAt: new Date().toISOString(),
-          persona: 'none'
+          persona: "none",
         };
-        
+
         this.chatSummaries.unshift(summary);
         this.activeChatId = newChatId;
       });
@@ -179,14 +200,15 @@ export class SidebarViewModel {
       console.error("Error creating new chat:", error);
       return { success: false };
     }
-  }
+  };
 
   deleteChat = async (id: string): Promise<boolean> => {
     try {
       // Delete from database first
       if (this.databaseMethods.deleteConversationFromDatabase) {
-        const success = await this.databaseMethods.deleteConversationFromDatabase(id);
-        
+        const success =
+          await this.databaseMethods.deleteConversationFromDatabase(id);
+
         if (!success) {
           return false;
         }
@@ -194,13 +216,15 @@ export class SidebarViewModel {
 
       runInAction(() => {
         // Remove from summaries
-        const updatedSummaries = this.chatSummaries.filter(summary => summary.id !== id);
-        
+        const updatedSummaries = this.chatSummaries.filter(
+          (summary) => summary.id !== id,
+        );
+
         // If we're deleting the active chat, clear active state
         if (this.activeChatId === id) {
           this.activeChatId = null;
         }
-        
+
         this.chatSummaries = updatedSummaries;
       });
 
@@ -209,7 +233,7 @@ export class SidebarViewModel {
       console.error("Error deleting chat:", error);
       return false;
     }
-  }
+  };
 
   updateChatTitle = async (id: string, title: string): Promise<boolean> => {
     const trimmedTitle = title.trim();
@@ -220,8 +244,11 @@ export class SidebarViewModel {
     try {
       // Update in database first
       if (this.databaseMethods.updateConversationInDatabase) {
-        const success = await this.databaseMethods.updateConversationInDatabase(id, { title: trimmedTitle });
-        
+        const success = await this.databaseMethods.updateConversationInDatabase(
+          id,
+          { title: trimmedTitle },
+        );
+
         if (!success) {
           return false;
         }
@@ -229,11 +256,13 @@ export class SidebarViewModel {
 
       runInAction(() => {
         // Update summary
-        const summaryIndex = this.chatSummaries.findIndex(summary => summary.id === id);
+        const summaryIndex = this.chatSummaries.findIndex(
+          (summary) => summary.id === id,
+        );
         if (summaryIndex >= 0) {
           this.chatSummaries[summaryIndex] = {
             ...this.chatSummaries[summaryIndex],
-            title: trimmedTitle
+            title: trimmedTitle,
           };
         }
       });
@@ -243,12 +272,14 @@ export class SidebarViewModel {
       console.error("Error updating title:", error);
       return false;
     }
-  }
+  };
 
   // Add a chat to summaries (called when a chat is loaded directly)
   addChatToSummaries = (conversation: any) => {
     runInAction(() => {
-      const existingSummary = this.chatSummaries.find(summary => summary.id === conversation.id);
+      const existingSummary = this.chatSummaries.find(
+        (summary) => summary.id === conversation.id,
+      );
       if (!existingSummary) {
         const summary: ChatSummary = {
           id: conversation.id,
@@ -257,11 +288,11 @@ export class SidebarViewModel {
           createdAt: conversation.createdAt,
           updatedAt: conversation.updatedAt,
           lastEditedAt: conversation.updatedAt,
-          persona: conversation.persona ?? 'none'
+          persona: conversation.persona ?? "none",
         };
-        
+
         this.chatSummaries.unshift(summary);
       }
     });
-  }
-} 
+  };
+}

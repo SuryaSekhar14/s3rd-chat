@@ -1,6 +1,6 @@
 import React, { useState, useRef, useCallback, useEffect } from "react";
 import { observer } from "mobx-react-lite";
-import { Sparkles, ImageIcon } from "lucide-react";
+import { Sparkles, ImageIcon, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -82,7 +82,7 @@ export const ChatInput = observer(function ChatInput({
     {
       enableOnFormTags: ["TEXTAREA"],
       preventDefault: true,
-    }
+    },
   );
 
   // Setup utility hotkeys
@@ -182,7 +182,7 @@ export const ChatInput = observer(function ChatInput({
       };
       animateFrame(start);
     },
-    [setInput]
+    [setInput],
   );
 
   const onSubmit = (e: React.FormEvent) => {
@@ -198,12 +198,12 @@ export const ChatInput = observer(function ChatInput({
 
     const maxX = particlesRef.current.reduce(
       (prev, current) => (current.x > prev ? current.x : prev),
-      0
+      0,
     );
     animate(maxX);
     handleSubmit(
       e,
-      uploadedImages.length > 0 ? uploadedImages[0].url : undefined
+      uploadedImages.length > 0 ? uploadedImages[0].url : undefined,
     );
 
     setUploadedImages([]);
@@ -211,7 +211,6 @@ export const ChatInput = observer(function ChatInput({
   };
 
   const handleImageUploaded = (imageUrl: string) => {
-
     const filename = imageUrl.split("/").pop()?.split("?")[0] || "image";
     setUploadedImages((prev) => [...prev, { url: imageUrl, filename }]);
     setShowImageUpload(false);
@@ -219,14 +218,13 @@ export const ChatInput = observer(function ChatInput({
 
   const handleRemoveImage = (indexToRemove: number) => {
     setUploadedImages((prev) =>
-      prev.filter((_, index) => index !== indexToRemove)
+      prev.filter((_, index) => index !== indexToRemove),
     );
   };
 
   const handlePaste = async (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
     const items = e.clipboardData?.items;
     if (!items) return;
-
 
     for (let i = 0; i < items.length; i++) {
       const item = items[i];
@@ -238,7 +236,7 @@ export const ChatInput = observer(function ChatInput({
         if (file) {
           if (file.type === "image/svg+xml") {
             showToast.error(
-              "SVG images are not supported. Please use JPG, PNG, or GIF."
+              "SVG images are not supported. Please use JPG, PNG, or GIF.",
             );
             continue;
           }
@@ -248,7 +246,6 @@ export const ChatInput = observer(function ChatInput({
             continue;
           }
 
-  
           const maxSize = 10 * 1024 * 1024;
           if (file.size > maxSize) {
             showToast.error("Image must be smaller than 10MB.");
@@ -256,15 +253,14 @@ export const ChatInput = observer(function ChatInput({
           }
 
           try {
-
             const response = await fetch(
               `/api/upload-image?filename=${encodeURIComponent(
-                file.name || "pasted-image"
+                file.name || "pasted-image",
               )}`,
               {
                 method: "POST",
                 body: file,
-              }
+              },
             );
 
             if (!response.ok) {
@@ -377,14 +373,14 @@ export const ChatInput = observer(function ChatInput({
           </div>
         </div>
         <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2 flex-1 min-w-0">
             <Select
               value={chatViewModel.selectedPersona}
               onValueChange={(persona) =>
                 chatViewModel.setSelectedPersona(persona)
               }
             >
-              <SelectTrigger className="w-[140px] h-8 text-xs">
+              <SelectTrigger className="w-1/3 sm:w-[140px] h-8 text-xs">
                 <SelectValue placeholder="Select persona" />
               </SelectTrigger>
               <SelectContent>
@@ -396,11 +392,13 @@ export const ChatInput = observer(function ChatInput({
               </SelectContent>
             </Select>
 
-            <ModelSelector
-              selectedModelId={selectedModelId}
-              availableModels={availableModels}
-              onModelChange={handleModelChange}
-            />
+            <div className="w-1/3 sm:w-auto">
+              <ModelSelector
+                selectedModelId={selectedModelId}
+                availableModels={availableModels}
+                onModelChange={handleModelChange}
+              />
+            </div>
           </div>
 
           {chatViewModel.generating ? (
@@ -410,15 +408,20 @@ export const ChatInput = observer(function ChatInput({
               size="sm"
               className="h-8 px-2 md:px-3"
             >
-              Stop
+              <span className="hidden sm:inline">Stop</span>
+              <span className="sm:hidden">Stop</span>
             </Button>
           ) : (
             <Button
               type="submit"
-              className="h-8 px-2 md:px-4"
-              disabled={chatViewModel.generating || (!input.trim() && uploadedImages.length === 0)}
+              className="h-8 px-2 sm:px-4 flex-shrink-0"
+              disabled={
+                chatViewModel.generating ||
+                (!input.trim() && uploadedImages.length === 0)
+              }
             >
-              {getSubmitButton(os)}
+              <Send className="h-4 w-4 sm:hidden" />
+              <span className="hidden sm:inline">{getSubmitButton(os)}</span>
             </Button>
           )}
         </div>

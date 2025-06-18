@@ -1,7 +1,7 @@
 // Export models for type usage
-export { ChatModel } from '@/models/ChatModel';
-export { ChatMessageModel } from '@/models/ChatMessageModel';
-export { ApiMessageModel } from '@/models/ApiMessageModel';
+export { ChatModel } from "@/models/ChatModel";
+export { ChatMessageModel } from "@/models/ChatMessageModel";
+export { ApiMessageModel } from "@/models/ApiMessageModel";
 
 export interface Chat {
   id: string;
@@ -18,6 +18,6 @@ export interface ChatMessage {
 }
 
 export interface ApiMessage {
-  role: 'system' | 'user' | 'assistant';
+  role: "system" | "user" | "assistant";
   content: string;
-} 
+}

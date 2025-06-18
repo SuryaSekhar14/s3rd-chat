@@ -14,8 +14,8 @@ interface ScreenSize {
 export function useScreenSize(mobileBreakpoint = 768): ScreenSize {
   const [screenSize, setScreenSize] = useState<ScreenSize>({
     isMobile: false,
-    height: typeof window !== 'undefined' ? window.innerHeight : 0,
-    width: typeof window !== 'undefined' ? window.innerWidth : 0,
+    height: typeof window !== "undefined" ? window.innerHeight : 0,
+    width: typeof window !== "undefined" ? window.innerWidth : 0,
   });
 
   useEffect(() => {
@@ -30,10 +30,10 @@ export function useScreenSize(mobileBreakpoint = 768): ScreenSize {
     };
     checkScreenSize();
 
-    window.addEventListener('resize', checkScreenSize);
+    window.addEventListener("resize", checkScreenSize);
 
-    return () => window.removeEventListener('resize', checkScreenSize);
+    return () => window.removeEventListener("resize", checkScreenSize);
   }, [mobileBreakpoint]);
 
   return screenSize;
-} 
+}
