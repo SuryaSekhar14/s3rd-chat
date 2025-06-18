@@ -396,70 +396,70 @@ export class ChatViewModel {
     this.isEnhancing = isEnhancing;
   };
 
-  generateChatTitle = async (id: string) => {
-    if (id !== this.activeChatId || !this._activeChat) return false;
+  // generateChatTitle = async (id: string) => {
+  //   if (id !== this.activeChatId || !this._activeChat) return false;
 
-    if (this._activeChat.messages.length === 0) {
-      showToast.error("Chat needs messages to generate a name");
-      return false;
-    }
+  //   if (this._activeChat.messages.length === 0) {
+  //     showToast.error("Chat needs messages to generate a name");
+  //     return false;
+  //   }
 
-    try {
-      const apiMessages = this._activeChat.messages.map(
-        (msg) =>
-          new ApiMessageModel(msg.isUser ? "user" : "assistant", msg.content),
-      );
+  //   try {
+  //     const apiMessages = this._activeChat.messages.map(
+  //       (msg) =>
+  //         new ApiMessageModel(msg.isUser ? "user" : "assistant", msg.content),
+  //     );
 
-      const response = await fetch("/api/chat-name-suggestion", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          chatId: this._activeChat?.id,
-          messages: apiMessages,
-        }),
-      });
+  //     const response = await fetch("/api/chat-name-suggestion", {
+  //       method: "POST",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //       },
+  //       body: JSON.stringify({
+  //         chatId: this._activeChat?.id,
+  //         messages: apiMessages,
+  //       }),
+  //     });
 
-      const data = await response.json();
+  //     const data = await response.json();
 
-      if (!response.ok) {
-        // Handle API error responses using status code
-        const statusCode = response.status;
-        let errorMessage = "Failed to generate chat title";
+  //     if (!response.ok) {
+  //       // Handle API error responses using status code
+  //       const statusCode = response.status;
+  //       let errorMessage = "Failed to generate chat title";
 
-        switch (statusCode) {
-          case 429:
-            errorMessage =
-              "Rate limit reached. Please wait a moment before generating another chat name.";
-            break;
-          case 408:
-            errorMessage =
-              "Request timed out while generating chat name. Please try again.";
-            break;
-          case 503:
-            errorMessage =
-              "Service temporarily unavailable. Please try again later.";
-            break;
-        }
+  //       switch (statusCode) {
+  //         case 429:
+  //           errorMessage =
+  //             "Rate limit reached. Please wait a moment before generating another chat name.";
+  //           break;
+  //         case 408:
+  //           errorMessage =
+  //             "Request timed out while generating chat name. Please try again.";
+  //           break;
+  //         case 503:
+  //           errorMessage =
+  //             "Service temporarily unavailable. Please try again later.";
+  //           break;
+  //       }
 
-        showToast.error(errorMessage);
-        return false;
-      }
+  //       showToast.error(errorMessage);
+  //       return false;
+  //     }
 
-      if (data.name) {
-        const success = await this.updateChatTitle(id, data.name);
-        if (success) {
-          return true;
-        }
-      }
-      return false;
-    } catch (error) {
-      console.error("Error generating chat title:", error);
-      showToast.error("Failed to generate chat title");
-      return false;
-    }
-  };
+  //     if (data.name) {
+  //       const success = await this.updateChatTitle(id, data.name);
+  //       if (success) {
+  //         return true;
+  //       }
+  //     }
+  //     return false;
+  //   } catch (error) {
+  //     console.error("Error generating chat title:", error);
+  //     showToast.error("Failed to generate chat title");
+  //     return false;
+  //   }
+  // };
 
   // ========== TITLE EDITING ==========
 
@@ -494,14 +494,14 @@ export class ChatViewModel {
     this.editedTitle = title;
   };
 
-  startGeneratingTitle = async () => {
-    if (!this._activeChat) return;
+  // startGeneratingTitle = async () => {
+  //   if (!this._activeChat) return;
 
-    this.isGeneratingTitle = true;
-    const success = await this.generateChatTitle(this._activeChat.id);
-    this.isGeneratingTitle = false;
-    return success;
-  };
+  //   this.isGeneratingTitle = true;
+  //   const success = await this.generateChatTitle(this._activeChat.id);
+  //   this.isGeneratingTitle = false;
+  //   return success;
+  // };
 
   // ========== AI INTEGRATION ==========
 

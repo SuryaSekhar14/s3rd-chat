@@ -274,6 +274,62 @@ export class SidebarViewModel {
     }
   };
 
+  generateChatTitle = async (chatId: string, messages?: any[]): Promise<void> => {
+    try {
+      // Find the chat summary to get access to its data
+      const chatSummary = this.chatSummaries.find(
+        (summary) => summary.id === chatId
+      );
+      
+      if (!chatSummary) {
+        console.error("Chat not found for title generation");
+        return;
+      }
+
+      // Call the API to generate a title
+      const response = await fetch("/api/chat-name-suggestion", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          chatId: chatId,
+          messages: messages || []
+        }),
+      });
+
+      if (!response.ok) {
+        const statusCode = response.status;
+        let errorMessage = "Failed to generate chat title";
+
+        switch (statusCode) {
+          case 429:
+            errorMessage = "Rate limit reached. Please wait a moment before generating another chat name.";
+            break;
+          case 408:
+            errorMessage = "Request timed out while generating chat name. Please try again.";
+            break;
+          case 503:
+            errorMessage = "Service temporarily unavailable. Please try again later.";
+            break;
+        }
+
+        console.error(errorMessage);
+        return;
+      }
+
+      const data = await response.json();
+
+      if (data.name) {
+        // Update the chat title with the generated name
+        await this.updateChatTitle(chatId, data.name);
+      }
+    } catch (error) {
+      console.error("Error generating chat title:", error);
+    }
+  };
+  
+
   // Add a chat to summaries (called when a chat is loaded directly)
   addChatToSummaries = (conversation: any) => {
     runInAction(() => {

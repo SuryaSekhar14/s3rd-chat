@@ -82,9 +82,9 @@ export const Chat = observer(function Chat({ isPreviewMode = false }: ChatProps)
           } else {
             sidebarViewModel.revalidateChatSummaries();
             
-            if (messages.length === 2 && activeChat.title === "New Chat") {
-              chatViewModel.startGeneratingTitle();
-            }
+            // if (messages.length === 2 && activeChat.title === "New Chat") {
+            //   chatViewModel.startGeneratingTitle();
+            // }
           }
         }
       },
