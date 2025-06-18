@@ -129,7 +129,6 @@ export const Sidebar = observer(function Sidebar({
     await chatViewModel.loadSpecificChat(chatId);
     const messages = chatViewModel.getAIMessagesFromActiveChat();
     await sidebarViewModel.generateChatTitle(chatId, messages);
-    // await chatViewModel.startGeneratingTitle();
   };
 
   const handleExportChat = async (chatId: string, title: string) => {
