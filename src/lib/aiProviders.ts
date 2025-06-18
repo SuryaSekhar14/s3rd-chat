@@ -62,7 +62,7 @@ export async function getModelProvider(modelId: ModelId) {
         return openai(modelId);
 
       case "gemini-2.5-flash-preview-04-17":
-      case "gemini-2.5-pro-exp-03-25":
+      // case "gemini-2.5-pro-exp-03-25":
         const googleKey = apiKeys.google;
         if (!googleKey) {
           console.error("No Google API key found, falling back to GPT-4o-mini");
@@ -76,36 +76,36 @@ export async function getModelProvider(modelId: ModelId) {
         process.env.GOOGLE_GENERATIVE_AI_API_KEY = googleKey;
         return google(modelId);
 
-      case "claude-4-sonnet-20250514":
-      case "claude-3-7-sonnet-20250219":
-      case "claude-3-5-sonnet-20241022":
-        const anthropicKey = apiKeys.anthropic;
-        if (!anthropicKey) {
-          console.error("No Anthropic API key found, falling back to GPT-4o-mini");
-          const fallbackOpenAIKey = apiKeys.openai;
-          if (!fallbackOpenAIKey) {
-            throw new Error("No API keys available for fallback");
-          }
-          process.env.OPENAI_API_KEY = fallbackOpenAIKey;
-          return openai("gpt-4o-mini");
-        }
-        process.env.ANTHROPIC_API_KEY = anthropicKey;
-        return anthropic(modelId);
+      // case "claude-4-sonnet-20250514":
+      // case "claude-3-7-sonnet-20250219":
+      // case "claude-3-5-sonnet-20241022":
+      //   const anthropicKey = apiKeys.anthropic;
+      //   if (!anthropicKey) {
+      //     console.error("No Anthropic API key found, falling back to GPT-4o-mini");
+      //     const fallbackOpenAIKey = apiKeys.openai;
+      //     if (!fallbackOpenAIKey) {
+      //       throw new Error("No API keys available for fallback");
+      //     }
+      //     process.env.OPENAI_API_KEY = fallbackOpenAIKey;
+      //     return openai("gpt-4o-mini");
+      //   }
+      //   process.env.ANTHROPIC_API_KEY = anthropicKey;
+      //   return anthropic(modelId);
 
-      case "deepseek-chat":
-      case "deepseek-reasoner":
-        const deepseekKey = apiKeys.deepseek;
-        if (!deepseekKey) {
-          console.error("No DeepSeek API key found, falling back to GPT-4o-mini");
-          const fallbackOpenAIKey = apiKeys.openai;
-          if (!fallbackOpenAIKey) {
-            throw new Error("No API keys available for fallback");
-          }
-          process.env.OPENAI_API_KEY = fallbackOpenAIKey;
-          return openai("gpt-4o-mini");
-        }
-        process.env.DEEPSEEK_API_KEY = deepseekKey;
-        return deepseek(modelId);
+      // case "deepseek-chat":
+      // case "deepseek-reasoner":
+      //   const deepseekKey = apiKeys.deepseek;
+      //   if (!deepseekKey) {
+      //     console.error("No DeepSeek API key found, falling back to GPT-4o-mini");
+      //     const fallbackOpenAIKey = apiKeys.openai;
+      //     if (!fallbackOpenAIKey) {
+      //       throw new Error("No API keys available for fallback");
+      //     }
+      //     process.env.OPENAI_API_KEY = fallbackOpenAIKey;
+      //     return openai("gpt-4o-mini");
+      //   }
+      //   process.env.DEEPSEEK_API_KEY = deepseekKey;
+      //   return deepseek(modelId);
 
       default:
         console.warn(`Unknown model ${modelId}, falling back to GPT-4o-mini`);
@@ -134,12 +134,12 @@ export function isModelSupported(modelId: string): modelId is ModelId {
     "gpt-4o",
     "gpt-4o-mini",
     "gemini-2.5-flash-preview-04-17",
-    "gemini-2.5-pro-exp-03-25",
-    "claude-4-sonnet-20250514",
-    "claude-3-7-sonnet-20250219",
-    "claude-3-5-sonnet-20241022",
-    "deepseek-chat",
-    "deepseek-reasoner",
+    // "gemini-2.5-pro-exp-03-25",
+    // "claude-4-sonnet-20250514",
+    // "claude-3-7-sonnet-20250219",
+    // "claude-3-5-sonnet-20241022",
+    // "deepseek-chat",
+    // "deepseek-reasoner",
   ];
 
   return supportedModels.includes(modelId as ModelId);
@@ -154,15 +154,15 @@ export function getProviderName(modelId: ModelId): string {
     case "gpt-4o-mini":
       return "OpenAI";
     case "gemini-2.5-flash-preview-04-17":
-    case "gemini-2.5-pro-exp-03-25":
       return "Google";
-    case "claude-4-sonnet-20250514":
-    case "claude-3-7-sonnet-20250219":
-    case "claude-3-5-sonnet-20241022":
-      return "Anthropic";
-    case "deepseek-chat":
-    case "deepseek-reasoner":
-      return "DeepSeek";
+    // case "gemini-2.5-pro-exp-03-25":
+    // case "claude-4-sonnet-20250514":
+    // case "claude-3-7-sonnet-20250219":
+    // case "claude-3-5-sonnet-20241022":
+    //   return "Anthropic";
+    // case "deepseek-chat":
+    // case "deepseek-reasoner":
+    //   return "DeepSeek";
     default:
       return "Unknown";
   }
