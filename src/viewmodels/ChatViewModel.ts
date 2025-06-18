@@ -533,14 +533,31 @@ export class ChatViewModel {
   };
 
   formatAIMessages = (messages: ApiMessage[]) => {
-    return messages.map((message, index) => ({
-      id: index,
-      content: this.ensureStringContent(message.content),
-      isUser: message.role === "user",
-      promptTokens: (message as any).promptTokens,
-      completionTokens: (message as any).completionTokens,
-      attachments: (message as any).attachments ?? [],
-    }));
+    return messages.map((message, index) => {
+      let attachments = (message as any).attachments ?? [];
+      
+      // Convert image data to attachments if present
+      if ((message as any).data?.imageUrl && message.role === "user") {
+        const imageUrl = (message as any).data.imageUrl;
+        attachments = [
+          ...attachments,
+          {
+            type: "image",
+            url: imageUrl,
+            filename: imageUrl.split("/").pop()?.split("?")[0] || "image"
+          }
+        ];
+      }
+      
+      return {
+        id: index,
+        content: this.ensureStringContent(message.content),
+        isUser: message.role === "user",
+        promptTokens: (message as any).promptTokens,
+        completionTokens: (message as any).completionTokens,
+        attachments,
+      };
+    });
   };
 
   // saveMessagesToStorage = async (messages: ApiMessage[]) => {

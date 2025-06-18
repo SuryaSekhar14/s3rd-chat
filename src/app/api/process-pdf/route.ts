@@ -79,18 +79,19 @@ export async function POST(request: NextRequest) {
     const pdfContent = docs.map((d) => d.pageContent).join("\n\n");
     const systemPrompt = `You are a helpful assistant that answers questions about PDF documents.
 
-The user has uploaded a PDF file and is asking questions about its content. 
-Please answer based on the PDF below.
+      The user has uploaded a PDF file and is asking questions about its content. 
+      Please answer based on the PDF below.
 
-PDF Content:
-${pdfContent}
+      PDF Content:
+        ${pdfContent}
 
-Instructions:
-- Answer only from the PDF
-- If not in the PDF, say so
-- Be concise yet thorough
-- Cite parts when relevant
-- If unreadable or empty, inform the user`;
+      Instructions:
+        - Answer only from the PDF
+        - If not in the PDF, say so
+        - Be concise yet thorough
+        - Cite parts when relevant
+        - If unreadable or empty, inform the user
+    `;
 
     const result = streamText({
       model: aiModel,

@@ -29,9 +29,6 @@ export const Chat = observer(function Chat() {
 
   // Track previous chatId to detect changes
   const [prevChatId, setPrevChatId] = React.useState<string | null>(null);
-  const [currentImageUrl, setCurrentImageUrl] = React.useState<string | null>(
-    null,
-  );
   const [currentPDFData, setCurrentPDFData] = React.useState<{ url: string; filename: string } | null>(
     null,
   );
@@ -56,7 +53,6 @@ export const Chat = observer(function Chat() {
         model: chatViewModel.getModelFromLocalStorage(),
         persona: selectedPersona,
         id: chatId,
-        data: currentImageUrl ? { imageUrl: currentImageUrl } : undefined,
         pdfDocs: pdfDocs ?? undefined,
       },
       onFinish: async (message) => {
@@ -132,6 +128,8 @@ export const Chat = observer(function Chat() {
 
   const handleSubmit = async (e: React.FormEvent, imageUrl?: string, pdfData?: { url: string; filename: string }) => {
     e.preventDefault();
+    
+    console.log('[Chat] handleSubmit called with imageUrl:', imageUrl);
 
     // Avoid empty submissions
     if (
@@ -142,14 +140,6 @@ export const Chat = observer(function Chat() {
       return;
 
     const currentInput = input.trim();
-
-    // Build attachments array for optimistic UI
-    let attachments: Array<{ type: string; url: string; filename?: string }> = [];
-    if (imageUrl) {
-      const filename = imageUrl.split("/").pop()?.split("?")[0] || "image";
-      attachments.push({ type: "image", url: imageUrl, filename });
-    }
-    // (Extend here for PDFs or other types if needed)
 
     // If we're on home page with no active chat, create a new chat first
     if (!activeChat && pathname === "/") {
@@ -165,30 +155,26 @@ export const Chat = observer(function Chat() {
           sidebarViewModel.setActiveChatId(result.chatId);
 
           if (imageUrl) {
-            setCurrentImageUrl(imageUrl);
-          }
-
-          if (pdfData) {
+            console.log('[Chat] Sending image message in new chat with URL:', imageUrl);
+            append({
+              content: currentInput || "What's on the image?",
+              role: "user",
+              data: { imageUrl }, // Store image URL in message data
+            });
+          } else if (pdfData) {
             setCurrentPDFData(pdfData);
-          }
-
-          // Now send the message immediately
-          append({
-            content: currentInput || (imageUrl ? "What's on the image?" : pdfData ? "What would you like to know about this PDF?" : ""),
-            role: "user",
-            attachments,
-          });
-
-          if (imageUrl) {
             setTimeout(() => {
-              setCurrentImageUrl(null);
-            }, 100);
-          }
-
-          if (pdfData) {
-            setTimeout(() => {
-              setCurrentPDFData(null);
-            }, 100);
+              append({
+                content: currentInput || "What would you like to know about this PDF?",
+                role: "user",
+              });
+              setTimeout(() => setCurrentPDFData(null), 100);
+            }, 50);
+          } else {
+            append({
+              content: currentInput,
+              role: "user",
+            });
           }
         } else {
           showToast.error("Failed to load new chat");
@@ -201,24 +187,30 @@ export const Chat = observer(function Chat() {
       }
     }
 
-    // Use append to send to the AI - this will display the message in the UI
-    append({
-      content: currentInput || (imageUrl ? "What's on the image?" : pdfData ? "What would you like to know about this PDF?" : ""),
-      role: "user",
-      attachments,
-    });
-
+    // For existing chats, handle image uploads with proper data
     if (imageUrl) {
-      setTimeout(() => {
-        setCurrentImageUrl(null);
-      }, 100);
-    }
-
-    if (pdfData) {
+      console.log('[Chat] Sending image message with URL:', imageUrl);
+      
+      append({
+        content: currentInput || "What's on the image?",
+        role: "user",
+        data: { imageUrl }, // Store image URL in message data
+      });
+    } else if (pdfData) {
       setCurrentPDFData(pdfData);
       setTimeout(() => {
-        setCurrentPDFData(null);
-      }, 100);
+        append({
+          content: currentInput || "What would you like to know about this PDF?",
+          role: "user",
+        });
+        setTimeout(() => setCurrentPDFData(null), 100);
+      }, 50);
+    } else {
+      // Regular text message
+      append({
+        content: currentInput,
+        role: "user",
+      });
     }
   };
 

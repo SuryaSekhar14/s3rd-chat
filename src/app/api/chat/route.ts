@@ -26,6 +26,18 @@ export const POST = AuthenticatedEdgeRequest(
         pdfDocs,
       } = requestBody;
 
+      // Extract image URL from message data if present
+      let extractedImageUrl = null;
+      if (messages && messages.length > 0) {
+        const lastMessage = messages[messages.length - 1];
+        if (lastMessage && lastMessage.data && lastMessage.data.imageUrl) {
+          extractedImageUrl = lastMessage.data.imageUrl;
+        }
+      }
+
+      console.log(`[DEBUG FROM ROUTE] data:`, requestBody.data);
+      console.log(`[DEBUG FROM ROUTE] extractedImageUrl:`, extractedImageUrl);
+
       console.log(
         `Chat API called with model: ${model}, chat ID: ${id}, persona: ${persona}`,
       );
@@ -133,12 +145,13 @@ When using web search, provide the search results in a clear, organized manner a
             let attachments: Array<{ type: string; url: string; filename?: string }> | undefined;
             let messageContent = lastUserMessage.content;
             
-            if (data?.imageUrl) {
-              // Single image from request data
+            if (data?.imageUrl || extractedImageUrl) {
+              // Single image from request data or extracted from message
+              const imageUrl = data?.imageUrl || extractedImageUrl;
               attachments = [{
                 type: "image",
-                url: data.imageUrl,
-                filename: data.imageUrl.split("/").pop()?.split("?")[0] || "image"
+                url: imageUrl,
+                filename: imageUrl.split("/").pop()?.split("?")[0] || "image"
               }];
             } else if (lastUserMessage.content && typeof lastUserMessage.content === "object" && Array.isArray(lastUserMessage.content)) {
               // Multimodal message with attachments
@@ -168,7 +181,8 @@ When using web search, provide the search results in a clear, organized manner a
       await dbOperations;
 
       let processedMessages = messages;
-      if (data?.imageUrl) {
+      if (data?.imageUrl || extractedImageUrl) {
+        const imageUrl = data?.imageUrl || extractedImageUrl;
         const lastMessageIndex = messages.length - 1;
         const lastMessage = messages[lastMessageIndex];
 
@@ -179,7 +193,7 @@ When using web search, provide the search results in a clear, organized manner a
               role: "user",
               content: [
                 { type: "text", text: lastMessage.content },
-                { type: "image", image: new URL(data.imageUrl) },
+                { type: "image", image: new URL(imageUrl) },
               ],
             },
           ];
