@@ -9,6 +9,7 @@ interface MessageType {
   isUser: boolean;
   promptTokens?: number;
   completionTokens?: number;
+  attachments?: Array<{ type: string; url: string; filename?: string }>;
 }
 
 interface MessageListProps {
@@ -111,6 +112,7 @@ export function MessageList({
           <>
             <div className="pt-2 md:pt-4"></div>
             {messages.map((message) => {
+              console.log('Message attachments:', message.attachments);
               return (
                 <Message
                   key={message.id}
@@ -118,6 +120,7 @@ export function MessageList({
                   isUser={message.isUser}
                   promptTokens={message.promptTokens}
                   completionTokens={message.completionTokens}
+                  attachments={message.attachments}
                 />
               );
             })}

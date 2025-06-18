@@ -60,6 +60,7 @@ export const ChatInput = observer(function ChatInput({
   const { selectedModelId, setSelectedModel, availableModels } = useModel();
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [pdfFilename, setPdfFilename] = useState<string | null>(null);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
 
   // Auto-focus when AI stops responding
   useEffect(() => {
@@ -224,8 +225,14 @@ export const ChatInput = observer(function ChatInput({
   };
 
   const handleImageUploaded = (imageUrl: string) => {
+    console.log('[ChatInput] Image upload completed:', imageUrl);
+    setIsUploadingImage(false);
     const filename = imageUrl.split("/").pop()?.split("?")[0] || "image";
-    setUploadedImages((prev) => [...prev, { url: imageUrl, filename }]);
+    setUploadedImages((prev) => {
+      const newImages = [...prev, { url: imageUrl, filename }];
+      console.log('[ChatInput] Updated uploadedImages:', newImages);
+      return newImages;
+    });
     setShowImageUpload(false);
   };
 
@@ -282,6 +289,7 @@ export const ChatInput = observer(function ChatInput({
           }
 
           try {
+            setIsUploadingImage(true);
             const response = await fetch(
               `/api/upload-image?filename=${encodeURIComponent(
                 file.name || "pasted-image",
@@ -309,6 +317,8 @@ export const ChatInput = observer(function ChatInput({
             const errorMessage =
               error instanceof Error ? error.message : "Unknown error occurred";
             showToast.error(`Failed to upload pasted image: ${errorMessage}`);
+          } finally {
+            setIsUploadingImage(false);
           }
         }
         break;
@@ -490,12 +500,19 @@ export const ChatInput = observer(function ChatInput({
               type="submit"
               className="h-8 px-2 sm:px-4 flex-shrink-0"
               disabled={
+                isUploadingImage ||
                 chatViewModel.generating ||
                 (!input.trim() && uploadedImages.length === 0 && uploadedPDFs.length === 0)
               }
             >
-              <Send className="h-4 w-4 sm:hidden" />
-              <span className="hidden sm:inline">{getSubmitButton(os)}</span>
+              {isUploadingImage ? (
+                <span className="flex items-center"><svg className="animate-spin h-4 w-4 mr-2" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" /></svg>Uploading...</span>
+              ) : (
+                <>
+                  <Send className="h-4 w-4 sm:hidden" />
+                  <span className="hidden sm:inline">{getSubmitButton(os)}</span>
+                </>
+              )}
             </Button>
           )}
         </div>

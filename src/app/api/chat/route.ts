@@ -129,8 +129,33 @@ When using web search, provide the search results in a clear, organized manner a
 
           const lastUserMessage = messages[messages.length - 1];
           if (lastUserMessage && lastUserMessage.role === "user") {
-            await DatabaseService.addMessage(id, lastUserMessage.content, true);
-            console.log(`[Chat API] Saved user message to conversation ${id}`);
+            // Extract attachments from the message or request data
+            let attachments: Array<{ type: string; url: string; filename?: string }> | undefined;
+            let messageContent = lastUserMessage.content;
+            
+            if (data?.imageUrl) {
+              // Single image from request data
+              attachments = [{
+                type: "image",
+                url: data.imageUrl,
+                filename: data.imageUrl.split("/").pop()?.split("?")[0] || "image"
+              }];
+            } else if (lastUserMessage.content && typeof lastUserMessage.content === "object" && Array.isArray(lastUserMessage.content)) {
+              // Multimodal message with attachments
+              const textItems = lastUserMessage.content.filter((item: any) => item.type === "text");
+              messageContent = textItems.map((item: any) => item.text).join(" ");
+              
+              attachments = lastUserMessage.content
+                .filter((item: any) => item.type === "image")
+                .map((item: any) => ({
+                  type: "image",
+                  url: item.image.toString(),
+                  filename: item.image.toString().split("/").pop()?.split("?")[0] || "image"
+                }));
+            }
+
+            await DatabaseService.addMessage(id, messageContent, true, undefined, undefined, attachments);
+            console.log(`[Chat API] Saved user message to conversation ${id}${attachments ? ` with ${attachments.length} attachment(s)` : ""}`);
           }
         } catch (dbError) {
           console.error(

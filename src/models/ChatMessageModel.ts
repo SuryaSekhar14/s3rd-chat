@@ -7,6 +7,7 @@ export interface ChatMessageJSON {
   aiModel?: string; // AI model used to generate this message (null for user messages)
   promptTokens?: number;
   completionTokens?: number;
+  attachments?: Array<{ type: string; url: string; filename?: string }>;
 }
 
 export class ChatMessageModel {
@@ -16,6 +17,7 @@ export class ChatMessageModel {
   aiModel?: string;
   promptTokens?: number;
   completionTokens?: number;
+  attachments?: Array<{ type: string; url: string; filename?: string }>;
 
   constructor(
     id: number,
@@ -24,6 +26,7 @@ export class ChatMessageModel {
     aiModel?: string,
     promptTokens?: number,
     completionTokens?: number,
+    attachments?: Array<{ type: string; url: string; filename?: string }>,
   ) {
     this.id = id;
     this.content = content;
@@ -31,14 +34,15 @@ export class ChatMessageModel {
     this.aiModel = aiModel;
     this.promptTokens = promptTokens;
     this.completionTokens = completionTokens;
+    this.attachments = attachments;
 
     // Make this object and its properties observable
     makeAutoObservable(this);
   }
 
   // Create a user message
-  static createUserMessage(id: number, content: string): ChatMessageModel {
-    return new ChatMessageModel(id, content, true);
+  static createUserMessage(id: number, content: string, attachments?: Array<{ type: string; url: string; filename?: string }>): ChatMessageModel {
+    return new ChatMessageModel(id, content, true, undefined, undefined, undefined, attachments);
   }
 
   // Create an assistant message
@@ -48,6 +52,7 @@ export class ChatMessageModel {
     aiModel?: string,
     promptTokens?: number,
     completionTokens?: number,
+    attachments?: Array<{ type: string; url: string; filename?: string }>,
   ): ChatMessageModel {
     return new ChatMessageModel(
       id,
@@ -56,6 +61,7 @@ export class ChatMessageModel {
       aiModel,
       promptTokens,
       completionTokens,
+      attachments,
     );
   }
 
@@ -76,6 +82,7 @@ export class ChatMessageModel {
       aiModel: this.aiModel,
       promptTokens: this.promptTokens,
       completionTokens: this.completionTokens,
+      attachments: this.attachments,
     };
   }
 
@@ -88,6 +95,7 @@ export class ChatMessageModel {
       json.aiModel,
       json.promptTokens,
       json.completionTokens,
+      json.attachments,
     );
   }
 }

@@ -57,6 +57,7 @@ model Message {
   aiModel        String?  // AI model used to generate this message (null for user messages)
   promptTokens   Int?     // Tokens used in the prompt (only for AI messages)
   completionTokens Int?   // Tokens used in the completion (only for AI messages)
+  attachments    Json?    // JSON array of attachments (images, files, etc.)
   createdAt      DateTime @default(now())
   
   // Relations

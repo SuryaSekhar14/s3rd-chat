@@ -143,6 +143,14 @@ export const Chat = observer(function Chat() {
 
     const currentInput = input.trim();
 
+    // Build attachments array for optimistic UI
+    let attachments: Array<{ type: string; url: string; filename?: string }> = [];
+    if (imageUrl) {
+      const filename = imageUrl.split("/").pop()?.split("?")[0] || "image";
+      attachments.push({ type: "image", url: imageUrl, filename });
+    }
+    // (Extend here for PDFs or other types if needed)
+
     // If we're on home page with no active chat, create a new chat first
     if (!activeChat && pathname === "/") {
       console.log("[Chat] Creating new chat from home page with first message");
@@ -168,6 +176,7 @@ export const Chat = observer(function Chat() {
           append({
             content: currentInput || (imageUrl ? "What's on the image?" : pdfData ? "What would you like to know about this PDF?" : ""),
             role: "user",
+            attachments,
           });
 
           if (imageUrl) {
@@ -196,6 +205,7 @@ export const Chat = observer(function Chat() {
     append({
       content: currentInput || (imageUrl ? "What's on the image?" : pdfData ? "What would you like to know about this PDF?" : ""),
       role: "user",
+      attachments,
     });
 
     if (imageUrl) {
