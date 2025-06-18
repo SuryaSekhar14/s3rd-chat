@@ -274,7 +274,7 @@ export class ChatViewModel {
         // ...other properties as before
         ...dbConversation,
       };
-      this.emit("change");
+      
     } catch (err) {
       console.error("[ChatViewModel] Error loading chat from DB:", err);
     }
