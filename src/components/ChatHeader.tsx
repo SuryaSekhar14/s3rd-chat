@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { usePreviewMode } from "@/hooks/usePreviewMode";
 import { useUser } from "@clerk/nextjs";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import Link from "next/link";
 
 export const ChatHeader = observer(() => {
   const router = useRouter();
@@ -75,15 +76,16 @@ export const ChatHeader = observer(() => {
         )}
         <div className="flex justify-end items-center p-1">
           <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => router.push("/settings")}
-              className="h-8 w-8 rounded-full hover:bg-accent/50 transition-colors p-1"
-              aria-label="Open settings"
-            >
-              <SettingsIcon className="h-4 w-4" />
-            </Button>
+            <Link href="/settings">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 rounded-full hover:bg-accent/50 transition-colors p-1"
+                aria-label="Open settings"
+              >
+                <SettingsIcon className="h-4 w-4" />
+              </Button>
+            </Link>
             <div className="p-1">
               <ThemeToggle />
             </div>
