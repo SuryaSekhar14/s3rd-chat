@@ -39,11 +39,11 @@ export default function ChatIdPage() {
           setIsLoadingChat(false);
         } else {
           console.log("[ChatIdPage] Chat not found, redirecting");
-          router.push("/chat");
+          router.push("/");
         }
       } catch (error) {
         console.error("Failed to load chat:", error);
-        router.push("/chat");
+        router.push("/");
       }
     };
 
