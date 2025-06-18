@@ -3,6 +3,7 @@ import { useChatViewModel, useSidebarViewModel } from "./useViewModel";
 import { useOperatingSystem } from "./useOperatingSystem";
 import { useRouter } from "next/navigation";
 import showToast from "@/lib/toast";
+import { analytics, ANALYTICS_EVENTS, ANALYTICS_PROPERTIES } from "@/lib/analytics";
 
 interface ChatActions {
   input: string;
@@ -23,6 +24,11 @@ export const useHotkeys = (chatActions: ChatActions) => {
   // Stop generation with Escape
   useReactHotkeys("escape", () => {
     if (chatViewModel.generating) {
+      // Track keyboard shortcut usage
+      analytics.track(ANALYTICS_EVENTS.KEYBOARD_SHORTCUT_USED, {
+        [ANALYTICS_PROPERTIES.SHORTCUT_KEY]: "escape",
+        action: "stop_generation",
+      });
       stop();
     }
   });
@@ -32,6 +38,12 @@ export const useHotkeys = (chatActions: ChatActions) => {
     `${modKey}+Shift+Enter`,
     async (e) => {
       e.preventDefault();
+
+      // Track keyboard shortcut usage
+      analytics.track(ANALYTICS_EVENTS.KEYBOARD_SHORTCUT_USED, {
+        [ANALYTICS_PROPERTIES.SHORTCUT_KEY]: `${modKey}+shift+enter`,
+        action: "create_new_chat",
+      });
 
       if (chatViewModel.generating) {
         showToast.error("Please wait for the response to complete");
@@ -57,6 +69,14 @@ export const useHotkeys = (chatActions: ChatActions) => {
     `${modKey}+e`,
     async (e) => {
       e.preventDefault();
+      
+      // Track keyboard shortcut usage
+      analytics.track(ANALYTICS_EVENTS.KEYBOARD_SHORTCUT_USED, {
+        [ANALYTICS_PROPERTIES.SHORTCUT_KEY]: `${modKey}+e`,
+        action: "enhance_prompt",
+        prompt_length: input.length,
+      });
+      
       chatViewModel.enhancePrompt(input, setInput);
     },
     {

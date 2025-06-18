@@ -11,6 +11,7 @@ import { useScreenSize } from "@/hooks/useScreenSize";
 import { PanelLeft } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { KeyboardShortcutsHelp } from "./KeyboardShortcutsHelp";
+import { analytics, ANALYTICS_EVENTS, ANALYTICS_PROPERTIES } from "@/lib/analytics";
 
 interface MainLayoutProps {
   readonly children: React.ReactNode;
@@ -159,24 +160,42 @@ export function MainLayout({ children, isPreviewMode = false }: MainLayoutProps)
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === "b") {
         e.preventDefault();
-        setSidebarOpen((prev) => !prev);
+        const newState = !sidebarOpen;
+        setSidebarOpen(newState);
+        
+        // Track sidebar toggle
+        analytics.track(newState ? ANALYTICS_EVENTS.SIDEBAR_EXPANDED : ANALYTICS_EVENTS.SIDEBAR_COLLAPSED, {
+          [ANALYTICS_PROPERTIES.SHORTCUT_KEY]: (e.ctrlKey ? "ctrl" : "meta") + "+b",
+          trigger: "keyboard",
+        });
       }
 
       if ((e.ctrlKey || e.metaKey) && e.key === "h") {
         e.preventDefault();
         setShortcutsDialogOpen(true);
+        
+        // Track help opened
+        analytics.track(ANALYTICS_EVENTS.HELP_OPENED, {
+          [ANALYTICS_PROPERTIES.SHORTCUT_KEY]: (e.ctrlKey ? "ctrl" : "meta") + "+h",
+        });
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []);
+  }, [sidebarOpen]);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();
         setCmdkOpen(true);
+        
+        // Track command palette opened
+        analytics.track(ANALYTICS_EVENTS.KEYBOARD_SHORTCUT_USED, {
+          [ANALYTICS_PROPERTIES.SHORTCUT_KEY]: (e.ctrlKey ? "ctrl" : "meta") + "+k",
+          action: "open_command_palette",
+        });
       }
     };
     window.addEventListener("keydown", handler);
@@ -184,7 +203,13 @@ export function MainLayout({ children, isPreviewMode = false }: MainLayoutProps)
   }, []);
 
   const toggleSidebar = () => {
-    setSidebarOpen(!sidebarOpen);
+    const newState = !sidebarOpen;
+    setSidebarOpen(newState);
+    
+    // Track sidebar toggle
+    analytics.track(newState ? ANALYTICS_EVENTS.SIDEBAR_EXPANDED : ANALYTICS_EVENTS.SIDEBAR_COLLAPSED, {
+      trigger: "button",
+    });
   };
 
   const openSidebarClass = isMobile ? "w-[85vw] max-w-[300px]" : "w-64";
@@ -244,7 +269,14 @@ export function MainLayout({ children, isPreviewMode = false }: MainLayoutProps)
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => setCmdkOpen(true)}
+              onClick={() => {
+                setCmdkOpen(true);
+                // Track command palette opened via button
+                analytics.track(ANALYTICS_EVENTS.KEYBOARD_SHORTCUT_USED, {
+                  action: "open_command_palette",
+                  trigger: "button",
+                });
+              }}
               className="h-8 w-8 rounded-lg border-none hover:bg-accent"
               aria-label="Open search"
             >

@@ -17,6 +17,7 @@ import { ApiMessage } from "@/lib/types";
 import showToast from "@/lib/toast";
 import { ChatHeader } from "./ChatHeader";
 import { usePreviewMode } from "@/hooks/usePreviewMode";
+import { analytics, ANALYTICS_EVENTS, ANALYTICS_PROPERTIES } from "@/lib/analytics";
 
 interface ChatProps {
   isPreviewMode?: boolean;
@@ -70,8 +71,16 @@ export const Chat = observer(function Chat({ isPreviewMode = false }: ChatProps)
         messageCount: isPreviewMode ? previewMode.messageCount : undefined,
       },
       onFinish: async (message) => {
-        // Make sure we have an active chat
+        // Track message received
         if (activeChat && message.role === "assistant") {
+          analytics.track(ANALYTICS_EVENTS.CHAT_MESSAGE_RECEIVED, {
+            [ANALYTICS_PROPERTIES.CHAT_ID]: activeChat.id,
+            [ANALYTICS_PROPERTIES.MESSAGE_LENGTH]: message.content.length,
+            [ANALYTICS_PROPERTIES.IS_PREVIEW_MODE]: isPreviewMode,
+            [ANALYTICS_PROPERTIES.MODEL_ID]: chatViewModel.getModelFromLocalStorage(),
+            [ANALYTICS_PROPERTIES.MESSAGE_COUNT]: messages.length + 1,
+          });
+
           if (isPreviewMode) {
             previewMode.addMessage(message.content, false);
             
@@ -94,11 +103,23 @@ export const Chat = observer(function Chat({ isPreviewMode = false }: ChatProps)
         const errorString = error?.toString() || '';
         const errorMessage = (error as any)?.message || '';
         
+        // Track API errors
+        const statusCode = (error as any)?.statusCode || (error as any)?.status;
+        analytics.trackError(
+          "api_error",
+          errorMessage || errorString,
+          (error as any)?.stack,
+          statusCode
+        );
+        
         if (isPreviewMode && (
           errorString.includes('Preview limit reached') || 
           errorMessage.includes('Preview limit reached') ||
           errorString.includes('requiresAuth')
         )) {
+          analytics.track(ANALYTICS_EVENTS.PREVIEW_LIMIT_REACHED, {
+            [ANALYTICS_PROPERTIES.ERROR_MESSAGE]: errorMessage || errorString,
+          });
           previewMode.showLimitReachedDialog();
           return;
         }
@@ -106,7 +127,6 @@ export const Chat = observer(function Chat({ isPreviewMode = false }: ChatProps)
         let toastMessage = "Failed to send message. Please try again.";
 
         // Check if error has status code information
-        const statusCode = (error as any)?.statusCode || (error as any)?.status;
 
         switch (statusCode) {
           case 400:
@@ -180,6 +200,10 @@ export const Chat = observer(function Chat({ isPreviewMode = false }: ChatProps)
 
     const currentInput = input.trim();
 
+    // Track message sending
+    const hasAttachments = !!(imageUrl || pdfData);
+    const modelId = chatViewModel.getModelFromLocalStorage();
+    
     if (isPreviewMode) {
       if (!previewMode.canSendMessage()) {
         previewMode.showLimitReachedDialog();
@@ -188,6 +212,8 @@ export const Chat = observer(function Chat({ isPreviewMode = false }: ChatProps)
 
       if (!activeChat) {
         previewMode.createConversation();
+        // Track chat creation in preview mode
+        analytics.trackChatCreated("preview", true);
       }
 
       const success = previewMode.incrementMessageCount();
@@ -197,6 +223,15 @@ export const Chat = observer(function Chat({ isPreviewMode = false }: ChatProps)
       }
       
       previewMode.addMessage(currentInput, true);
+
+      // Track message sent in preview mode
+      analytics.trackMessageSent(
+        "preview",
+        currentInput.length,
+        hasAttachments,
+        modelId,
+        true
+      );
 
       try {
         append({
@@ -222,12 +257,27 @@ export const Chat = observer(function Chat({ isPreviewMode = false }: ChatProps)
       const result = await sidebarViewModel.createNewChat();
 
       if (result.success && result.chatId) {
+        // Track chat creation
+        analytics.trackChatCreated(result.chatId, false);
+        
+        // Small delay to ensure database transaction is committed
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
         // Load the new chat directly without navigation for smooth UX
         const success = await chatViewModel.loadSpecificChat(result.chatId);
         if (success) {
           // Update URL without causing navigation using history API
           window.history.replaceState(null, "", `/chat/${result.chatId}`);
           sidebarViewModel.setActiveChatId(result.chatId);
+
+          // Track message sent in new chat
+          analytics.trackMessageSent(
+            result.chatId,
+            (currentInput || (imageUrl ? "What's on the image?" : "What would you like to know about this PDF?")).length,
+            hasAttachments,
+            modelId,
+            false
+          );
 
           if (imageUrl) {
             console.log('[Chat] Sending image message in new chat with URL:', imageUrl);
@@ -265,6 +315,17 @@ export const Chat = observer(function Chat({ isPreviewMode = false }: ChatProps)
     }
 
     // For existing chats, handle image uploads with proper data
+    if (activeChat) {
+      // Track message sent in existing chat
+      analytics.trackMessageSent(
+        activeChat.id,
+        (currentInput || (imageUrl ? "What's on the image?" : pdfData ? "What would you like to know about this PDF?" : "")).length,
+        hasAttachments,
+        modelId,
+        false
+      );
+    }
+
     if (imageUrl) {
       console.log('[Chat] Sending image message with URL:', imageUrl);
       

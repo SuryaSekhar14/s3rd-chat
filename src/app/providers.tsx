@@ -6,6 +6,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 import { SWRConfig } from "swr";
 import { ViewModelProvider } from "@/viewmodels/ViewModelProvider";
 import { swrConfig } from "@/lib/swr-config";
+import { UserAnalytics } from "@/components/UserAnalytics";
 
 export function Providers({
   children,
@@ -16,7 +17,9 @@ export function Providers({
     <ClerkProvider afterSignOutUrl="/sign-in">
       <SWRConfig value={swrConfig}>
         <ThemeProvider attribute="class">
-          <ViewModelProvider>{children}</ViewModelProvider>
+          <ViewModelProvider>
+            <UserAnalytics>{children}</UserAnalytics>
+          </ViewModelProvider>
         </ThemeProvider>
       </SWRConfig>
     </ClerkProvider>

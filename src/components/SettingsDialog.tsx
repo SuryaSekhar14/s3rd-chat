@@ -12,7 +12,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { APIKeySettings } from "@/components/APIKeySettings";
-import { Settings, Key, Palette, X } from "lucide-react";
+import { Settings, Key, Palette } from "lucide-react";
+import { analytics, ANALYTICS_EVENTS } from "@/lib/analytics";
 
 interface SettingsDialogProps {
   open: boolean;
@@ -25,6 +26,8 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
   useEffect(() => {
     if (open) {
       setActiveTab("api-keys");
+      // Track settings dialog opened
+      analytics.track(ANALYTICS_EVENTS.SETTINGS_OPENED);
     }
   }, [open]);
 
