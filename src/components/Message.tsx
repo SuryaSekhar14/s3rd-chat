@@ -1,6 +1,5 @@
 import React, { useMemo, ReactNode, useState } from "react";
 
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { CopyIcon } from "@/components/icons/CopyIcon";
 import { Button } from "@/components/ui/button";
 import { LucideCircleDollarSign, FileText } from "lucide-react";

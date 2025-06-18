@@ -131,6 +131,21 @@ export const Sidebar = observer(function Sidebar({
     await sidebarViewModel.generateChatTitle(chatId, messages);
   };
 
+  const handleDeleteChat = async (chatId: string) => {
+    const wasActiveChat = chatId === activeChat?.id;
+    
+    const success = await sidebarViewModel.deleteChat(chatId);
+    
+    if (success && wasActiveChat) {
+      // If we deleted the active chat, redirect to home
+      chatViewModel.clearActiveChat();
+      sidebarViewModel.setActiveChatId(null);
+      window.history.replaceState(null, "", "/");
+    }
+    
+    return success;
+  };
+
   const handleExportChat = async (chatId: string, title: string) => {
     await handleExportConversation(
       chatId,
@@ -222,7 +237,7 @@ export const Sidebar = observer(function Sidebar({
                       isPinned={true}
                       onChatClick={handleChatClick}
                       onUpdateTitle={handleUpdateTitle}
-                      onDeleteChat={sidebarViewModel.deleteChat}
+                      onDeleteChat={handleDeleteChat}
                       onPinChat={handlePinChat}
                       onGenerateTitle={handleGenerateTitle}
                       onExportChat={handleExportChat}
@@ -240,7 +255,7 @@ export const Sidebar = observer(function Sidebar({
                     isPinned={true}
                     onChatClick={handleChatClick}
                     onUpdateTitle={handleUpdateTitle}
-                    onDeleteChat={sidebarViewModel.deleteChat}
+                    onDeleteChat={handleDeleteChat}
                     onPinChat={handlePinChat}
                     onGenerateTitle={handleGenerateTitle}
                     onExportChat={handleExportChat}
@@ -267,7 +282,7 @@ export const Sidebar = observer(function Sidebar({
                   isPinned={false}
                   onChatClick={handleChatClick}
                   onUpdateTitle={handleUpdateTitle}
-                  onDeleteChat={sidebarViewModel.deleteChat}
+                  onDeleteChat={handleDeleteChat}
                   onPinChat={handlePinChat}
                   onGenerateTitle={handleGenerateTitle}
                   onExportChat={handleExportChat}
