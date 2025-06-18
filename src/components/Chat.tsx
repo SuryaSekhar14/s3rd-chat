@@ -348,7 +348,7 @@ export const Chat = observer(function Chat({ isPreviewMode = false }: ChatProps)
             onCreateChat={() => {
               // Just scroll to input area or show a message
               const inputElement = document.querySelector(
-                'input[type="text"], textarea',
+                'textarea',
               ) as HTMLInputElement | HTMLTextAreaElement;
               if (inputElement) {
                 inputElement.focus();
