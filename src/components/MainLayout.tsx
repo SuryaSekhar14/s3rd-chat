@@ -14,6 +14,7 @@ import { KeyboardShortcutsHelp } from "./KeyboardShortcutsHelp";
 
 interface MainLayoutProps {
   readonly children: React.ReactNode;
+  readonly isPreviewMode?: boolean;
 }
 
 function SidebarSearchCmdk({
@@ -116,7 +117,7 @@ function SidebarSearchCmdk({
   );
 }
 
-export function MainLayout({ children }: MainLayoutProps) {
+export function MainLayout({ children, isPreviewMode = false }: MainLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const { isMobile } = useScreenSize();
   const [shortcutsDialogOpen, setShortcutsDialogOpen] = useState(false);
@@ -188,6 +189,16 @@ export function MainLayout({ children }: MainLayoutProps) {
 
   const openSidebarClass = isMobile ? "w-[85vw] max-w-[300px]" : "w-64";
   const closedSidebarClass = isMobile ? "-translate-x-full" : "w-10";
+
+  if (isPreviewMode) {
+    return (
+      <div className="flex h-screen relative">
+        <div className="flex-1 overflow-hidden relative">
+          {children}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen relative">

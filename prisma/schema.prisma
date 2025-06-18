@@ -83,3 +83,15 @@ model Document {
   @@index([userId, createdAt(sort: Desc)])
   @@map("documents")
 }
+
+model AnonymousSession {
+  id          String   @id @default(cuid())
+  sessionId   String   @unique // Could be IP address or browser fingerprint
+  messageCount Int      @default(0)
+  lastUsed    DateTime @default(now())
+  createdAt   DateTime @default(now())
+  
+  @@index([sessionId])
+  @@index([lastUsed])
+  @@map("anonymous_sessions")
+}

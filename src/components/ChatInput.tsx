@@ -32,6 +32,7 @@ interface ChatInputProps {
   stop: () => void;
   status: "streaming" | "submitted" | "ready" | "error";
   onPDFProcessed?: (pdfUrl: string, filename: string) => void;
+  isPreviewMode?: boolean;
 }
 
 export const ChatInput = observer(function ChatInput({
@@ -41,6 +42,7 @@ export const ChatInput = observer(function ChatInput({
   stop,
   status,
   onPDFProcessed,
+  isPreviewMode = false,
 }: ChatInputProps) {
   const chatViewModel = useChatViewModel();
   const os = useOperatingSystem();
@@ -333,6 +335,9 @@ export const ChatInput = observer(function ChatInput({
     if (uploadedPDFs.length > 0) {
       return "Ask something about this PDF...";
     }
+    if (isPreviewMode) {
+      return "Type your message here...";
+    }
     return "Type something here, paste an image, or upload a PDF";
   };
 
@@ -405,55 +410,59 @@ export const ChatInput = observer(function ChatInput({
           />
 
           <div className="absolute right-2 top-2 flex gap-1">
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="h-6 w-6 opacity-60 hover:opacity-100 transition-opacity"
-              onClick={() => {
-                setShowImageUpload(!showImageUpload);
-                setShowPDFUpload(false);
-              }}
-              disabled={chatViewModel.generating}
-              title="Upload image"
-            >
-              <ImageIcon className="h-4 w-4" />
-            </Button>
+            {!isPreviewMode && (
+              <>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6 opacity-60 hover:opacity-100 transition-opacity"
+                  onClick={() => {
+                    setShowImageUpload(!showImageUpload);
+                    setShowPDFUpload(false);
+                  }}
+                  disabled={chatViewModel.generating}
+                  title="Upload image"
+                >
+                  <ImageIcon className="h-4 w-4" />
+                </Button>
 
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="h-6 w-6 opacity-60 hover:opacity-100 transition-opacity"
-              onClick={() => {
-                setShowPDFUpload(!showPDFUpload);
-                setShowImageUpload(false);
-              }}
-              disabled={chatViewModel.generating}
-              title="Upload PDF"
-            >
-              <FileText className="h-4 w-4" />
-            </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6 opacity-60 hover:opacity-100 transition-opacity"
+                  onClick={() => {
+                    setShowPDFUpload(!showPDFUpload);
+                    setShowImageUpload(false);
+                  }}
+                  disabled={chatViewModel.generating}
+                  title="Upload PDF"
+                >
+                  <FileText className="h-4 w-4" />
+                </Button>
 
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="h-6 w-6 opacity-60 hover:opacity-100 transition-opacity"
-              onClick={() => chatViewModel.enhancePrompt(input, setInput)}
-              disabled={
-                chatViewModel.generating ||
-                chatViewModel.enhancing ||
-                !input.trim()
-              }
-              title="Enhance prompt"
-            >
-              <Sparkles
-                className={`h-4 w-4 ${
-                  chatViewModel.enhancing ? "animate-pulse" : ""
-                }`}
-              />
-            </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6 opacity-60 hover:opacity-100 transition-opacity"
+                  onClick={() => chatViewModel.enhancePrompt(input, setInput)}
+                  disabled={
+                    chatViewModel.generating ||
+                    chatViewModel.enhancing ||
+                    !input.trim()
+                  }
+                  title="Enhance prompt"
+                >
+                  <Sparkles
+                    className={`h-4 w-4 ${
+                      chatViewModel.enhancing ? "animate-pulse" : ""
+                    }`}
+                  />
+                </Button>
+              </>
+            )}
           </div>
         </div>
         <div className="flex items-center justify-between gap-2">
@@ -502,7 +511,7 @@ export const ChatInput = observer(function ChatInput({
               disabled={
                 isUploadingImage ||
                 chatViewModel.generating ||
-                (!input.trim() && uploadedImages.length === 0 && uploadedPDFs.length === 0)
+                (isPreviewMode ? !input.trim() : (!input.trim() && uploadedImages.length === 0 && uploadedPDFs.length === 0))
               }
             >
               {isUploadingImage ? (
