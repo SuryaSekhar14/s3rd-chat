@@ -247,7 +247,7 @@ export const ChatHistory = () => {
               <History className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
               <h3 className="text-lg font-semibold mb-2">No Chat History</h3>
               <p className="text-muted-foreground">
-                You haven't started any conversations yet. Start chatting to see your history here.
+                You haven&apos;t started any conversations yet. Start chatting to see your history here.
               </p>
             </div>
           ) : (

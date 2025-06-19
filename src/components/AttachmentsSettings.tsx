@@ -237,7 +237,7 @@ export function AttachmentsSettings() {
           </Badge>
         </CardTitle>
         <p className="text-sm text-muted-foreground">
-          View and download all attachments you've shared in conversations
+          View and download all attachments you&apos;ve shared in conversations
         </p>
       </CardHeader>
       <CardContent>
