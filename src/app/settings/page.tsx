@@ -5,7 +5,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { APIKeySettings } from "@/components/APIKeySettings";
-import { Settings, Key, Palette, ArrowLeft, User, Mail } from "lucide-react";
+import { ChatHistory } from "@/components/ChatHistory";
+import { Settings, Key, Palette, ArrowLeft, User, Mail, History } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -105,7 +106,7 @@ export default function SettingsPage() {
               onValueChange={setActiveTab}
               className="w-full"
             >
-              <TabsList className="grid w-full max-w-md grid-cols-2">
+              <TabsList className="grid w-full max-w-lg grid-cols-3">
                 <TabsTrigger
                   value="api-keys"
                   className="flex items-center gap-2"
@@ -119,6 +120,13 @@ export default function SettingsPage() {
                 >
                   <Palette className="h-4 w-4" />
                   Appearance
+                </TabsTrigger>
+                <TabsTrigger
+                  value="chat-history"
+                  className="flex items-center gap-2"
+                >
+                  <History className="h-4 w-4" />
+                  Chat History
                 </TabsTrigger>
               </TabsList>
               <div className="mt-8">
@@ -139,6 +147,9 @@ export default function SettingsPage() {
                       </div>
                     </div>
                   </div>
+                </TabsContent>
+                <TabsContent value="chat-history" className="space-y-6">
+                  <ChatHistory />
                 </TabsContent>
               </div>
             </Tabs>

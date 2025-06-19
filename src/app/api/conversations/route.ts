@@ -11,7 +11,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { conversationId, title } = await req.json();
+    const { conversationId, title, action } = await req.json();
+
+    if (action === "deleteAll") {
+      await DatabaseService.deleteAllUserConversations(userId);
+      return NextResponse.json({ success: true });
+    }
 
     if (!conversationId) {
       return NextResponse.json(

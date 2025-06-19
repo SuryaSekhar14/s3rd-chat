@@ -258,4 +258,40 @@ export class DatabaseService {
       throw error;
     }
   }
+
+  static async deleteAllUserConversations(clerkUserId: string) {
+    try {
+      const user = await this.getOrCreateUser(clerkUserId);
+
+      await prisma.conversation.deleteMany({
+        where: { userId: user.id },
+      });
+
+      return true;
+    } catch (error) {
+      console.error("Error deleting all user conversations:", error);
+      throw error;
+    }
+  }
+  
+  static async getUserConversationsWithMessages(clerkUserId: string) {
+    try {
+      const user = await this.getOrCreateUser(clerkUserId);
+
+      const conversations = await prisma.conversation.findMany({
+        where: { userId: user.id },
+        include: {
+          messages: {
+            orderBy: { createdAt: "asc" },
+          },
+        },
+        orderBy: { updatedAt: "desc" },
+      });
+
+      return conversations;
+    } catch (error) {
+      console.error("Error getting user conversations with messages:", error);
+      throw error;
+    }
+  }
 }
