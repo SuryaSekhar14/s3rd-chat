@@ -3,6 +3,7 @@
 import { useTheme } from "next-themes";
 import { Monitor, Sun, Moon } from "lucide-react";
 import showToast from "@/lib/toast";
+import { analytics, ANALYTICS_EVENTS, ANALYTICS_PROPERTIES } from "@/lib/analytics";
 
 export function ThemeToggle() {
   const { theme, setTheme } = useTheme();
@@ -22,6 +23,12 @@ export function ThemeToggle() {
     const currentIndex = getCurrentThemeIndex();
     const nextIndex = (currentIndex + 1) % themes.length;
     const nextTheme = themes[nextIndex];
+
+    // Track theme change
+    analytics.track(ANALYTICS_EVENTS.THEME_CHANGED, {
+      [ANALYTICS_PROPERTIES.THEME]: nextTheme.id,
+      previous_theme: themes[currentIndex].id,
+    });
 
     setTheme(nextTheme.id);
     showToast.custom(

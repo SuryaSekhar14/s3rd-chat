@@ -24,6 +24,7 @@ import { PDFPill } from "@/components/PDFPill";
 import { useModel } from "@/hooks/useModel";
 import showToast from "@/lib/toast";
 import { ModelSelector } from "@/components/ModelSelector";
+import { analytics, ANALYTICS_EVENTS, ANALYTICS_PROPERTIES } from "@/lib/analytics";
 
 interface ChatInputProps {
   input: string;
@@ -101,6 +102,14 @@ export const ChatInput = observer(function ChatInput({
   const handleModelChange = (modelId: string) => {
     setSelectedModel(modelId);
     const model = availableModels.find((m) => m.id === modelId);
+    
+    // Track model change
+    analytics.track(ANALYTICS_EVENTS.MODEL_CHANGED, {
+      [ANALYTICS_PROPERTIES.MODEL_ID]: modelId,
+      [ANALYTICS_PROPERTIES.MODEL_NAME]: model?.name || modelId,
+      [ANALYTICS_PROPERTIES.MODEL_PROVIDER]: model?.provider || 'unknown',
+    });
+    
     showToast.success(`Model changed to ${model?.name || modelId}`);
   };
 
@@ -223,6 +232,10 @@ export const ChatInput = observer(function ChatInput({
     console.log('[ChatInput] Image upload completed:', imageUrl);
     setIsUploadingImage(false);
     const filename = imageUrl.split("/").pop()?.split("?")[0] || "image";
+    
+    // Track successful image upload
+    analytics.trackFileUpload('image', filename, 0, 'click', true);
+    
     setUploadedImages((prev) => {
       const newImages = [...prev, { url: imageUrl, filename }];
       console.log('[ChatInput] Updated uploadedImages:', newImages);
@@ -232,12 +245,20 @@ export const ChatInput = observer(function ChatInput({
   };
 
   const handleRemoveImage = (indexToRemove: number) => {
+    // Track image removal
+    analytics.track(ANALYTICS_EVENTS.IMAGE_REMOVED, {
+      [ANALYTICS_PROPERTIES.FILE_TYPE]: 'image',
+    });
+    
     setUploadedImages((prev) =>
       prev.filter((_, index) => index !== indexToRemove),
     );
   };
 
   const handlePDFUploaded = (pdfUrl: string, filename: string) => {
+    // Track successful PDF upload
+    analytics.trackFileUpload('pdf', filename, 0, 'click', true);
+    
     setUploadedPDFs((prev) => [...prev, { url: pdfUrl, filename }]);
     setShowPDFUpload(false);
     setPdfUrl(pdfUrl);
@@ -248,6 +269,11 @@ export const ChatInput = observer(function ChatInput({
   };
 
   const handleRemovePDF = (indexToRemove: number) => {
+    // Track PDF removal
+    analytics.track(ANALYTICS_EVENTS.PDF_REMOVED, {
+      [ANALYTICS_PROPERTIES.FILE_TYPE]: 'pdf',
+    });
+    
     setUploadedPDFs((prev) =>
       prev.filter((_, index) => index !== indexToRemove),
     );
@@ -302,6 +328,15 @@ export const ChatInput = observer(function ChatInput({
 
             const result = await response.json();
             const filename = result.filename || file.name || "pasted-image";
+            
+            // Track successful paste upload
+            analytics.trackFileUpload('image', filename, file.size, 'paste', true);
+            analytics.track(ANALYTICS_EVENTS.FILE_PASTED, {
+              [ANALYTICS_PROPERTIES.FILE_TYPE]: 'image',
+              [ANALYTICS_PROPERTIES.FILE_SIZE]: file.size,
+              [ANALYTICS_PROPERTIES.FILE_NAME]: filename,
+            });
+            
             setUploadedImages((prev) => [
               ...prev,
               { url: result.url, filename },
@@ -311,6 +346,10 @@ export const ChatInput = observer(function ChatInput({
             console.error("Error uploading pasted image:", error);
             const errorMessage =
               error instanceof Error ? error.message : "Unknown error occurred";
+            
+            // Track failed paste upload
+            analytics.trackFileUpload('image', file.name || 'pasted-image', file.size, 'paste', false);
+            
             showToast.error(`Failed to upload pasted image: ${errorMessage}`);
           } finally {
             setIsUploadingImage(false);
@@ -462,9 +501,14 @@ export const ChatInput = observer(function ChatInput({
           <div className="flex items-center gap-1 sm:gap-2 flex-1 min-w-0">
             <Select
               value={chatViewModel.selectedPersona}
-              onValueChange={(persona) =>
-                chatViewModel.setSelectedPersona(persona)
-              }
+              onValueChange={(persona) => {
+                // Track persona selection
+                analytics.track(ANALYTICS_EVENTS.PERSONA_SELECTED, {
+                  persona_id: persona,
+                  persona_name: personaPrompts[persona as keyof typeof personaPrompts]?.name || persona,
+                });
+                chatViewModel.setSelectedPersona(persona);
+              }}
             >
               <SelectTrigger className="w-1/3 sm:w-[140px] h-8 text-xs">
                 <SelectValue placeholder="Select persona" />

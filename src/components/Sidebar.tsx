@@ -15,6 +15,7 @@ import type { ChatListItemHandle } from "@/components/ChatListItem";
 import { usePinnedChats } from "@/hooks/usePinnedChats";
 import { handleExportConversation } from "@/lib/exportUtils";
 import { Input } from "@/components/ui/input";
+import { analytics, ANALYTICS_EVENTS, ANALYTICS_PROPERTIES } from "@/lib/analytics";
 
 export const Sidebar = observer(function Sidebar({
   onCollapse,
@@ -82,6 +83,12 @@ export const Sidebar = observer(function Sidebar({
     }
 
     if (id !== activeChat?.id) {
+      // Track chat loading
+      analytics.track(ANALYTICS_EVENTS.CHAT_LOADED, {
+        [ANALYTICS_PROPERTIES.CHAT_ID]: id,
+        [ANALYTICS_PROPERTIES.LOAD_TIME]: performance.now(),
+      });
+      
       // Load the chat directly without navigation for smooth UX
       const success = await chatViewModel.loadSpecificChat(id);
       if (success) {
@@ -97,9 +104,17 @@ export const Sidebar = observer(function Sidebar({
   const handlePinChat = (chatId: string, title: string) => {
     if (isPinned(chatId)) {
       unpinChat(chatId);
+      analytics.track(ANALYTICS_EVENTS.CHAT_UNPINNED, {
+        [ANALYTICS_PROPERTIES.CHAT_ID]: chatId,
+        [ANALYTICS_PROPERTIES.CHAT_TITLE]: title,
+      });
       showToast.success("Chat unpinned");
     } else {
       pinChat(chatId, title);
+      analytics.track(ANALYTICS_EVENTS.CHAT_PINNED, {
+        [ANALYTICS_PROPERTIES.CHAT_ID]: chatId,
+        [ANALYTICS_PROPERTIES.CHAT_TITLE]: title,
+      });
       showToast.success("Chat pinned");
     }
   };
@@ -107,6 +122,12 @@ export const Sidebar = observer(function Sidebar({
   const handleUpdateTitle = async (chatId: string, newTitle: string) => {
     const success = await sidebarViewModel.updateChatTitle(chatId, newTitle);
     if (success) {
+      // Track title update
+      analytics.track(ANALYTICS_EVENTS.CHAT_TITLE_UPDATED, {
+        [ANALYTICS_PROPERTIES.CHAT_ID]: chatId,
+        [ANALYTICS_PROPERTIES.CHAT_TITLE]: newTitle,
+      });
+      
       // Update pinned chat title if it's pinned
       updatePinnedChatTitle(chatId, newTitle);
     }
@@ -119,6 +140,12 @@ export const Sidebar = observer(function Sidebar({
       return;
     }
 
+    // Track new chat creation intent
+    analytics.track(ANALYTICS_EVENTS.CHAT_CREATED, {
+      [ANALYTICS_PROPERTIES.IS_PREVIEW_MODE]: false,
+      source: 'sidebar_button',
+    });
+
     chatViewModel.clearActiveChat();
     sidebarViewModel.setActiveChatId(null);
 
@@ -126,6 +153,11 @@ export const Sidebar = observer(function Sidebar({
   };
 
   const handleGenerateTitle = async (chatId: string) => {
+    // Track title generation
+    analytics.track(ANALYTICS_EVENTS.CHAT_TITLE_GENERATED, {
+      [ANALYTICS_PROPERTIES.CHAT_ID]: chatId,
+    });
+    
     await chatViewModel.loadSpecificChat(chatId);
     const messages = chatViewModel.getAIMessagesFromActiveChat();
     await sidebarViewModel.generateChatTitle(chatId, messages);
@@ -133,20 +165,36 @@ export const Sidebar = observer(function Sidebar({
 
   const handleDeleteChat = async (chatId: string) => {
     const wasActiveChat = chatId === activeChat?.id;
+    const chatTitle = chats.find(c => c.id === chatId)?.title || 'Unknown';
     
     const success = await sidebarViewModel.deleteChat(chatId);
     
-    if (success && wasActiveChat) {
-      // If we deleted the active chat, redirect to home
-      chatViewModel.clearActiveChat();
-      sidebarViewModel.setActiveChatId(null);
-      window.history.replaceState(null, "", "/");
+    if (success) {
+      // Track chat deletion
+      analytics.track(ANALYTICS_EVENTS.CHAT_DELETED, {
+        [ANALYTICS_PROPERTIES.CHAT_ID]: chatId,
+        [ANALYTICS_PROPERTIES.CHAT_TITLE]: chatTitle,
+        was_active: wasActiveChat,
+      });
+      
+      if (wasActiveChat) {
+        // If we deleted the active chat, redirect to home
+        chatViewModel.clearActiveChat();
+        sidebarViewModel.setActiveChatId(null);
+        window.history.replaceState(null, "", "/");
+      }
     }
     
     return success;
   };
 
   const handleExportChat = async (chatId: string, title: string) => {
+    // Track chat export
+    analytics.track(ANALYTICS_EVENTS.CHAT_EXPORTED, {
+      [ANALYTICS_PROPERTIES.CHAT_ID]: chatId,
+      [ANALYTICS_PROPERTIES.CHAT_TITLE]: title,
+    });
+    
     await handleExportConversation(
       chatId,
       title,
@@ -166,7 +214,10 @@ export const Sidebar = observer(function Sidebar({
             <Button
               variant="ghost"
               size="icon"
-              onClick={onCollapse}
+              onClick={() => {
+                analytics.track(ANALYTICS_EVENTS.SIDEBAR_COLLAPSED);
+                onCollapse();
+              }}
               className="ml-2"
               aria-label="Collapse sidebar"
             >
@@ -190,7 +241,18 @@ export const Sidebar = observer(function Sidebar({
           placeholder="Search your threads..."
           className="mt-3 w-full text-sm px-3 py-2 rounded-md bg-background border border-muted focus:outline-none focus:ring-2 focus:ring-indigo-400"
           value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
+          onChange={(e) => {
+            const newQuery = e.target.value;
+            setSearchQuery(newQuery);
+            
+            // Track search usage (debounced)
+            if (newQuery.trim().length > 2) {
+              analytics.track(ANALYTICS_EVENTS.CHAT_SEARCHED, {
+                query_length: newQuery.length,
+                has_results: filteredPinnedChats.length + filteredUnpinnedChats.length > 0,
+              });
+            }
+          }}
           aria-label="Search chats"
         />
       </div>

@@ -3,6 +3,7 @@
 import { SignOutButton } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { analytics, ANALYTICS_EVENTS } from "@/lib/analytics";
 
 export default function SignOutPage() {
   const router = useRouter();
@@ -15,7 +16,17 @@ export default function SignOutPage() {
         </h1>
         <div className="flex flex-col gap-4">
           <SignOutButton>
-            <Button className="w-full">Sign Out</Button>
+            <Button 
+              className="w-full"
+              onClick={() => {
+                // Track sign out event
+                analytics.track(ANALYTICS_EVENTS.USER_SIGNED_OUT, {
+                  session_length: analytics.getSessionLength(),
+                });
+              }}
+            >
+              Sign Out
+            </Button>
           </SignOutButton>
           <Button
             variant="outline"
