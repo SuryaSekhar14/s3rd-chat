@@ -1,8 +1,7 @@
 import { makeAutoObservable, runInAction } from "mobx";
 
 import { ChatModel } from "@/models/ChatModel";
-import { ApiMessageModel } from "@/models/ApiMessageModel";
-import { ChatMessageJSON, ChatMessageModel } from "@/models/ChatMessageModel";
+import { ChatMessageJSON } from "@/models/ChatMessageModel";
 import { ApiMessage } from "@/lib/types";
 
 import showToast from "@/lib/toast";
@@ -10,7 +9,10 @@ import { defaultModel } from "@/lib/config";
 
 // Database interface - only what ChatViewModel needs
 interface DatabaseMethods {
-  getSpecificConversation?: (conversationId: string) => Promise<any | null>;
+  getSpecificConversation?: (
+    conversationId: string, 
+    options?: { recentOnly?: boolean; limit?: number }
+  ) => Promise<any | null>;
   saveMessagesToDatabase?: (
     conversationId: string,
     messages: ChatMessageJSON[],
@@ -187,7 +189,10 @@ export class ChatViewModel {
 
     try {
       const conversation =
-        await this.databaseMethods.getSpecificConversation!(chatId);
+        await this.databaseMethods.getSpecificConversation!(chatId, { 
+          recentOnly: true, 
+          limit: 100 
+        });
 
       if (!conversation) {
         console.log("[ChatViewModel] Chat not found:", chatId);

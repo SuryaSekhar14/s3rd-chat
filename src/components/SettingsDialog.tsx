@@ -9,7 +9,6 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { APIKeySettings } from "@/components/APIKeySettings";
 import { Settings, Key, Palette } from "lucide-react";

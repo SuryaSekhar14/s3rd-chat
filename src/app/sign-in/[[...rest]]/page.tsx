@@ -98,6 +98,7 @@ export default function SignInPage() {
                 identityPreviewEditButtonIcon: "text-indigo-400",
               },
             }}
+            signUpUrl="/sign-in"
           />
         </div>
       </motion.div>

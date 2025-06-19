@@ -212,9 +212,6 @@ export function MainLayout({ children, isPreviewMode = false }: MainLayoutProps)
     });
   };
 
-  const openSidebarClass = isMobile ? "w-[85vw] max-w-[300px]" : "w-64";
-  const closedSidebarClass = isMobile ? "-translate-x-full" : "w-10";
-
   if (isPreviewMode) {
     return (
       <div className="flex h-screen relative">
@@ -227,35 +224,43 @@ export function MainLayout({ children, isPreviewMode = false }: MainLayoutProps)
 
   return (
     <div className="flex h-screen relative">
-      {isMobile && sidebarOpen && (
+      {isMobile && (
         <div
-          className="fixed inset-0 bg-black/50 z-20"
+          className={`fixed inset-0 bg-black/50 z-20 sidebar-overlay-transition ${
+            sidebarOpen ? 'opacity-100 backdrop-blur-sm' : 'opacity-0 pointer-events-none'
+          }`}
           onClick={toggleSidebar}
           aria-hidden="true"
         />
       )}
 
-      {sidebarOpen && (
-        <div
-          className={`
-            ${isMobile ? "fixed left-0 top-0 bottom-0 z-30" : "relative"} 
-            h-full border-r transition-all duration-300 ease-in-out 
-            ${sidebarOpen ? openSidebarClass : closedSidebarClass}
-            bg-background
-          `}
-        >
-          <div className={`h-full block`}>
-            <Sidebar onCollapse={toggleSidebar} isCollapsed={!sidebarOpen} />
-          </div>
+      <div
+        className={`
+          ${isMobile ? "fixed left-0 top-0 bottom-0 z-30" : "relative"} 
+          h-full border-r sidebar-transition
+          ${
+            isMobile
+              ? sidebarOpen
+                ? "translate-x-0 w-[85vw] max-w-[300px]"
+                : "-translate-x-full w-[85vw] max-w-[300px]"
+              : sidebarOpen
+              ? "w-64"
+              : "w-0 border-r-0"
+          }
+          bg-background overflow-hidden
+        `}
+      >
+        <div className={`h-full sidebar-content-transition w-[300px] md:w-64 ${sidebarOpen ? 'opacity-100' : 'opacity-0'}`}>
+          <Sidebar onCollapse={toggleSidebar} isCollapsed={!sidebarOpen} />
         </div>
-      )}
+      </div>
       
       <div className="flex-1 overflow-hidden relative">
         {children}
       </div>
 
       {!sidebarOpen && (
-        <div className="fixed top-4 left-2 z-50 flex items-center">
+        <div className="fixed top-4 left-2 z-50 flex items-center transition-all duration-300 ease-in-out">
           <div className="flex flex-row items-center gap-2 bg-black/70 rounded-xl px-3 py-2 shadow-lg border border-white/10 backdrop-blur-md">
             <Button
               variant="ghost"

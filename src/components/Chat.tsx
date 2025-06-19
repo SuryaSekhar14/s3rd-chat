@@ -10,9 +10,9 @@ import { Loading } from "@/components/Loading";
 import { Welcome } from "@/components/Welcome";
 import { useUser } from "@clerk/nextjs";
 
-import { useChatViewModel, useSidebarViewModel } from "@/hooks/useViewModel";
-import { useHotkeys } from "@/hooks/useHotkeys";
-import { useChat } from "@ai-sdk/react";
+  import { useChatViewModel, useSidebarViewModel } from "@/hooks/useViewModel";
+  import { useHotkeys } from "@/hooks/useHotkeys";
+  import { useChat } from "@ai-sdk/react";
 import { ApiMessage } from "@/lib/types";
 import showToast from "@/lib/toast";
 import { ChatHeader } from "./ChatHeader";
@@ -266,7 +266,7 @@ export const Chat = observer(function Chat({ isPreviewMode = false }: ChatProps)
         // Load the new chat directly without navigation for smooth UX
         const success = await chatViewModel.loadSpecificChat(result.chatId);
         if (success) {
-          // Update URL without causing navigation using history API
+          // Update URL using Next.js router without causing full navigation
           window.history.replaceState(null, "", `/chat/${result.chatId}`);
           sidebarViewModel.setActiveChatId(result.chatId);
 
@@ -369,6 +369,7 @@ export const Chat = observer(function Chat({ isPreviewMode = false }: ChatProps)
     }
   };
 
+  // Setup hotkeys - only called once per Chat component
   useHotkeys({
     input,
     stop,
@@ -405,7 +406,7 @@ export const Chat = observer(function Chat({ isPreviewMode = false }: ChatProps)
             onCreateChat={() => {
               // Just scroll to input area or show a message
               const inputElement = document.querySelector(
-                'input[type="text"], textarea',
+                'textarea',
               ) as HTMLInputElement | HTMLTextAreaElement;
               if (inputElement) {
                 inputElement.focus();

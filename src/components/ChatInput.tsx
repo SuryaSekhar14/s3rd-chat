@@ -16,7 +16,7 @@ import { personaPrompts } from "@/lib/prompts";
 import { getSubmitButton } from "@/lib/utils/getSubmitButton";
 import { useChatViewModel } from "@/hooks/useViewModel";
 import { useOperatingSystem } from "@/hooks/useOperatingSystem";
-import { useHotkeys } from "@/hooks/useHotkeys";
+
 import { ImageUpload } from "@/components/ImageUpload";
 import { ImagePill } from "@/components/ImagePill";
 import { PDFUpload } from "@/components/PDFUpload";
@@ -98,13 +98,6 @@ export const ChatInput = observer(function ChatInput({
       preventDefault: true,
     },
   );
-
-  // Setup utility hotkeys
-  useHotkeys({
-    input,
-    stop,
-    setInput,
-  });
 
   const handleModelChange = (modelId: string) => {
     setSelectedModel(modelId);

@@ -14,13 +14,31 @@ export async function GET(
     }
 
     const { id: conversationId } = await params;
+    
+    const url = new URL(request.url);
+    const recentOnly = url.searchParams.get("recent") === "true";
+    const limit = parseInt(url.searchParams.get("limit") || "50");
 
-    const conversation = await DatabaseService.getUserConversation(
-      userId,
-      conversationId,
-    );
+    let conversation;
+    
+    if (recentOnly) {
+      conversation = await DatabaseService.getConversationWithRecentMessages(
+        conversationId,
+        limit
+      );
+    } else {
+      conversation = await DatabaseService.getConversationOptimized(conversationId);
+    }
 
     if (!conversation) {
+      return NextResponse.json(
+        { error: "Conversation not found" },
+        { status: 404 },
+      );
+    }
+
+    const user = await DatabaseService.getOrCreateUser(userId);
+    if (conversation.userId !== user.id) {
       return NextResponse.json(
         { error: "Conversation not found" },
         { status: 404 },

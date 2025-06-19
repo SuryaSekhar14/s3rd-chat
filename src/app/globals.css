@@ -122,6 +122,23 @@
   }
 }
 
+@layer utilities {
+  .sidebar-transition {
+    transition: width 300ms cubic-bezier(0.4, 0, 0.2, 1),
+                transform 300ms cubic-bezier(0.4, 0, 0.2, 1),
+                opacity 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .sidebar-content-transition {
+    transition: opacity 250ms cubic-bezier(0.4, 0, 0.2, 1) 50ms;
+  }
+  
+  .sidebar-overlay-transition {
+    transition: opacity 300ms cubic-bezier(0.4, 0, 0.2, 1),
+                backdrop-filter 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}
+
 /* Markdown Styles */
 .markdown-content h1 {
   font-size: 1.5rem;
