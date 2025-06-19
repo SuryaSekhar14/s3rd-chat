@@ -73,3 +73,24 @@ npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+## Screenshots
+
+<table>
+  <tr>
+    <td width="50%">
+      <img src="https://jguybrl8o3m3wfj4.public.blob.vercel-storage.com/user_2wWdrhLm5ipSUk7ZfAXyLnEAFBe/1750355809271-image.png" alt="Screenshot 1" width="100%">
+    </td>
+    <td width="50%">
+      <img src="https://jguybrl8o3m3wfj4.public.blob.vercel-storage.com/user_2wWdrhLm5ipSUk7ZfAXyLnEAFBe/1750356044670-image.png" alt="Screenshot 2" width="100%">
+    </td>
+  </tr>
+  <tr>
+    <td width="50%">
+      <img src="https://jguybrl8o3m3wfj4.public.blob.vercel-storage.com/user_2wWdrhLm5ipSUk7ZfAXyLnEAFBe/1750356076162-image.png" alt="Screenshot 3" width="100%">
+    </td>
+    <td width="50%">
+      <img src="https://jguybrl8o3m3wfj4.public.blob.vercel-storage.com/user_2wWdrhLm5ipSUk7ZfAXyLnEAFBe/1750356119410-image.png" alt="Screenshot 4 (Light Mode)" width="100%">
+    </td>
+  </tr>
+</table>
