@@ -294,4 +294,78 @@ export class DatabaseService {
       throw error;
     }
   }
+
+  static async getConversationOptimized(conversationId: string) {
+    try {
+      const conversation = await prisma.conversation.findUnique({
+        where: { id: conversationId },
+        select: {
+          id: true,
+          title: true,
+          createdAt: true,
+          updatedAt: true,
+          userId: true,
+          messages: {
+            select: {
+              id: true,
+              content: true,
+              isUser: true,
+              aiModel: true,
+              promptTokens: true,
+              completionTokens: true,
+              attachments: true,
+              createdAt: true,
+            },
+            orderBy: { createdAt: "asc" },
+          },
+        },
+      });
+
+      return conversation;
+    } catch (error) {
+      console.error("Error getting conversation (optimized):", error);
+      throw error;
+    }
+  }
+
+  static async getConversationWithRecentMessages(conversationId: string, limit = 50) {
+    try {
+      const conversation = await prisma.conversation.findUnique({
+        where: { id: conversationId },
+        select: {
+          id: true,
+          title: true,
+          createdAt: true,
+          updatedAt: true,
+          userId: true,
+        },
+      });
+
+      if (!conversation) return null;
+
+      const messages = await prisma.message.findMany({
+        where: { conversationId },
+        select: {
+          id: true,
+          content: true,
+          isUser: true,
+          aiModel: true,
+          promptTokens: true,
+          completionTokens: true,
+          attachments: true,
+          createdAt: true,
+        },
+        orderBy: { createdAt: "desc" },
+        take: limit,
+      });
+
+      return {
+        ...conversation,
+        messages: messages.reverse(),
+      };
+    } catch (error) {
+      console.error("Error getting conversation with recent messages:", error);
+      throw error;
+    }
+  }
 }

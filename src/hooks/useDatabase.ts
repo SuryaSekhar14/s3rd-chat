@@ -175,11 +175,20 @@ export const useDatabase = () => {
   );
 
   const getSpecificConversation = useCallback(
-    async (conversationId: string) => {
+    async (conversationId: string, options?: { recentOnly?: boolean; limit?: number }) => {
       if (!user?.id || !isLoaded) return null;
 
       try {
-        const response = await fetch(`/api/conversations/${conversationId}`);
+        const params = new URLSearchParams();
+        if (options?.recentOnly) {
+          params.set("recent", "true");
+          params.set("limit", (options.limit || 50).toString());
+        }
+        
+        const queryString = params.toString();
+        const url = `/api/conversations/${conversationId}${queryString ? `?${queryString}` : ""}`;
+        
+        const response = await fetch(url);
 
         if (!response.ok) {
           if (response.status === 404) {

@@ -9,7 +9,10 @@ import { defaultModel } from "@/lib/config";
 
 // Database interface - only what ChatViewModel needs
 interface DatabaseMethods {
-  getSpecificConversation?: (conversationId: string) => Promise<any | null>;
+  getSpecificConversation?: (
+    conversationId: string, 
+    options?: { recentOnly?: boolean; limit?: number }
+  ) => Promise<any | null>;
   saveMessagesToDatabase?: (
     conversationId: string,
     messages: ChatMessageJSON[],
@@ -186,7 +189,10 @@ export class ChatViewModel {
 
     try {
       const conversation =
-        await this.databaseMethods.getSpecificConversation!(chatId);
+        await this.databaseMethods.getSpecificConversation!(chatId, { 
+          recentOnly: true, 
+          limit: 100 
+        });
 
       if (!conversation) {
         console.log("[ChatViewModel] Chat not found:", chatId);

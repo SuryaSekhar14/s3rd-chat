@@ -11,7 +11,6 @@ const fetcher = async (url: string) => {
   return response.json();
 };
 
-// Simple SWR hook for conversations
 export const useConversationsSWR = () => {
   const { user, isLoaded } = useUser();
 
@@ -21,12 +20,13 @@ export const useConversationsSWR = () => {
     {
       revalidateOnFocus: false,
       revalidateOnReconnect: false,
-      dedupingInterval: 10000,
+      dedupingInterval: 30000,
       revalidateIfStale: false,
       revalidateOnMount: true,
       refreshInterval: 0,
       errorRetryCount: 1,
       errorRetryInterval: 2000,
+      focusThrottleInterval: 60000,
     },
   );
 
@@ -36,6 +36,45 @@ export const useConversationsSWR = () => {
     error,
     refresh: mutate,
     mutate, // Export mutate function for optimistic updates
+  };
+};
+
+export const useConversationSWR = (conversationId: string | null, options?: { recentOnly?: boolean; limit?: number }) => {
+  const { user, isLoaded } = useUser();
+
+  const params = new URLSearchParams();
+  if (options?.recentOnly) {
+    params.set("recent", "true");
+    params.set("limit", (options.limit || 50).toString());
+  }
+  const queryString = params.toString();
+  
+  const key = conversationId && user?.id && isLoaded 
+    ? `/api/conversations/${conversationId}${queryString ? `?${queryString}` : ""}`
+    : null;
+
+  const { data, error, isLoading, mutate } = useSWR(
+    key,
+    fetcher,
+    {
+      revalidateOnFocus: false,
+      revalidateOnReconnect: false,
+      dedupingInterval: 60000,
+      revalidateIfStale: false,
+      revalidateOnMount: true,
+      refreshInterval: 0,
+      errorRetryCount: 2,
+      errorRetryInterval: 1000,
+      keepPreviousData: true,
+    }
+  );
+
+  return {
+    conversation: data?.conversation ?? null,
+    isLoading,
+    error,
+    refresh: mutate,
+    mutate,
   };
 };
 
