@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { APIKeySettings } from "@/components/APIKeySettings";
 import { ChatHistory } from "@/components/ChatHistory";
-import { Settings, Key, Palette, ArrowLeft, User, Mail, History } from "lucide-react";
+import { AttachmentsSettings } from "@/components/AttachmentsSettings";
+import { Settings, Key, Palette, ArrowLeft, User, Mail, History, FileImage } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -106,7 +107,7 @@ export default function SettingsPage() {
               onValueChange={setActiveTab}
               className="w-full"
             >
-              <TabsList className="grid w-full max-w-lg grid-cols-3">
+              <TabsList className="grid w-full max-w-2xl grid-cols-4">
                 <TabsTrigger
                   value="api-keys"
                   className="flex items-center gap-2"
@@ -127,6 +128,13 @@ export default function SettingsPage() {
                 >
                   <History className="h-4 w-4" />
                   Chat History
+                </TabsTrigger>
+                <TabsTrigger
+                  value="attachments"
+                  className="flex items-center gap-2"
+                >
+                  <FileImage className="h-4 w-4" />
+                  Attachments
                 </TabsTrigger>
               </TabsList>
               <div className="mt-8">
@@ -150,6 +158,9 @@ export default function SettingsPage() {
                 </TabsContent>
                 <TabsContent value="chat-history" className="space-y-6">
                   <ChatHistory />
+                </TabsContent>
+                <TabsContent value="attachments" className="space-y-6">
+                  <AttachmentsSettings />
                 </TabsContent>
               </div>
             </Tabs>
