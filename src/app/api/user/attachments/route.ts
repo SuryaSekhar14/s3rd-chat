@@ -30,14 +30,10 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    const messagesWithAttachments = await prisma.message.findMany({
+    const allMessages = await prisma.message.findMany({
       where: {
         conversation: {
           userId: user.id,
-        },
-        attachments: {
-          path: ['$', 'attachments'],
-          array_contains: [{}],
         },
       },
       include: {
@@ -52,6 +48,12 @@ export async function GET(req: NextRequest) {
         createdAt: "desc",
       },
     });
+
+    const messagesWithAttachments = allMessages.filter(message => 
+      message.attachments && 
+      Array.isArray(message.attachments) && 
+      (message.attachments as any[]).length > 0
+    );
 
     const attachments: AttachmentWithContext[] = [];
     
